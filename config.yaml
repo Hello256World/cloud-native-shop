@@ -13,3 +13,9 @@ postgres:
   appName: cloud-native-shop
   minPoolSize: 5
   maxPoolSize: 100
+
+redis:
+  host: localhost
+  port: 6380
+  password: ""
+  database: 0

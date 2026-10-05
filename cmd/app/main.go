@@ -11,6 +11,7 @@ import (
 	"github.com/Hello256World/cloud-native-shop/internal/app"
 	"github.com/Hello256World/cloud-native-shop/internal/config"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/postgres"
+	"github.com/Hello256World/cloud-native-shop/internal/platform/redis"
 )
 
 func main() {
@@ -40,7 +41,17 @@ func run() error {
 		return err
 	}
 
-	app := app.NewApplication(conf, postgresPool)
+	redisClient, err := redis.NewClient(redis.Options{
+		URI:      conf.RedisConfig.GetConnectionURI(),
+		Password: conf.RedisConfig.Password,
+		Database: conf.RedisConfig.Database,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	app := app.NewApplication(conf, postgresPool, redisClient)
 
 	runCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

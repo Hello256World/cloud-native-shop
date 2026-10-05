@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Environment    string         `fig:"environment" validate:"required"`
 	PostgresConfig PostgresConfig `fig:"postgres" validate:"required"`
+	RedisConfig    RedisConfig    `fig:"redis" validate:"required"`
 	HTTPConfig     ServerConfig   `fig:"http" validate:"required"`
 }
 
@@ -31,6 +32,13 @@ type PostgresConfig struct {
 	AppName     string `fig:"appName" validate:"required"`
 	MinPoolSize int    `fig:"minPoolSize" validate:"required"`
 	MaxPoolSize int    `fig:"maxPoolSize" validate:"required"`
+}
+
+type RedisConfig struct {
+	Host     string `fig:"host" validate:"required"`
+	Port     int    `fig:"port" validate:"required"`
+	Password string `fig:"password"`
+	Database int    `fig:"database"`
 }
 
 func (c PostgresConfig) GetConnectionURI() string {
@@ -58,6 +66,10 @@ func (c PostgresConfig) GetConnectionURI() string {
 	log.Println(uri)
 
 	return uri
+}
+
+func (r RedisConfig) GetConnectionURI() string {
+	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
 type ServerConfig struct {
