@@ -1,0 +1,15 @@
+environment: development
+
+http:
+  port: 8080
+
+postgres:
+  host: localhost
+  port: 5433
+  username:
+  password:
+  params:
+  database: cloud-native-shop-db
+  appName: cloud-native-shop
+  minPoolSize: 5
+  maxPoolSize: 100
