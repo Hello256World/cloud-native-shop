@@ -34,12 +34,6 @@ type PostgresConfig struct {
 	MaxPoolSize int    `fig:"maxPoolSize" validate:"required"`
 }
 
-type RedisConfig struct {
-	Host     string `fig:"host" validate:"required"`
-	Port     int    `fig:"port" validate:"required"`
-	Password string `fig:"password"`
-	Database int    `fig:"database"`
-}
 
 func (c PostgresConfig) GetConnectionURI() string {
 	userInfo := ""
@@ -58,14 +52,21 @@ func (c PostgresConfig) GetConnectionURI() string {
 		c.Port,
 		c.Database,
 	)
-
+	
 	if c.Params != "" {
 		uri += "?" + c.Params
 	}
 
 	log.Println(uri)
-
+	
 	return uri
+}
+
+type RedisConfig struct {
+	Host     string `fig:"host" validate:"required"`
+	Port     int    `fig:"port" validate:"required"`
+	Password string `fig:"password"`
+	Database int    `fig:"database"`
 }
 
 func (r RedisConfig) GetConnectionURI() string {
