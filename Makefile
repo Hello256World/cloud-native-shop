@@ -1,5 +1,5 @@
 create-migrate::
-	migrate create -seq -ext .sql -dir ./migrations create_event_table
+	migrate create -ext sql -dir migrations/platform -seq init
 
 add-migrate::
-	migrate -path ./migrations -database "postgres://postgres:postgres@localhost:5433/demo?sslmode=disable" up
+	migrate -path migrations/platform -database "postgres://cloud-native-shop:cloud-native-shop-password@localhost:5433/cloud-native-shop-db?sslmode=disable" up

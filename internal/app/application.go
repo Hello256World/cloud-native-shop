@@ -56,7 +56,7 @@ func (a *application) Run(ctx context.Context) error {
 	case err := <-errChan:
 		return fmt.Errorf("server failed to start: %w", err)
 	case <-ctx.Done():
-		log.Printf("received signal %v, shutting down", context.Cause(ctx))
+		log.Printf("received signal \"%v\", shutting down", context.Cause(ctx))
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
