@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS catalog.product_variant_values;
+DROP TABLE IF EXISTS catalog.product_variants;
+DROP TABLE IF EXISTS catalog.variant_values;
+DROP TABLE IF EXISTS catalog.variant_types;
+DROP TABLE IF EXISTS catalog.compare_products;
+DROP TABLE IF EXISTS catalog.product_images;
+DROP TABLE IF EXISTS catalog.products;
+DROP TABLE IF EXISTS catalog.categories;
+DROP SCHEMA IF EXISTS catalog;
