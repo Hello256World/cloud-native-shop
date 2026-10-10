@@ -19,3 +19,6 @@ redis:
   port: 6380
   password: ""
   database: 0
+
+log:
+  level: debug

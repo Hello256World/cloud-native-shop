@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,10 +15,15 @@ type Config struct {
 	PostgresConfig PostgresConfig `fig:"postgres" validate:"required"`
 	RedisConfig    RedisConfig    `fig:"redis" validate:"required"`
 	HTTPConfig     ServerConfig   `fig:"http" validate:"required"`
+	LogConfig      LogConfig      `fig:"log" validate:"required"`
 }
 
 func (c Config) IsProduction() bool {
 	return c.Environment == "production"
+}
+
+type LogConfig struct {
+	Level string `fig:"level" validate:"required"`
 }
 
 type PostgresConfig struct {
@@ -33,7 +37,6 @@ type PostgresConfig struct {
 	MinPoolSize int    `fig:"minPoolSize" validate:"required"`
 	MaxPoolSize int    `fig:"maxPoolSize" validate:"required"`
 }
-
 
 func (c PostgresConfig) GetConnectionURI() string {
 	userInfo := ""
@@ -52,13 +55,11 @@ func (c PostgresConfig) GetConnectionURI() string {
 		c.Port,
 		c.Database,
 	)
-	
+
 	if c.Params != "" {
 		uri += "?" + c.Params
 	}
 
-	log.Println(uri)
-	
 	return uri
 }
 

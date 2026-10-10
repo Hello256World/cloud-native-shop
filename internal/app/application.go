@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/Hello256World/cloud-native-shop/internal/config"
+	"github.com/Hello256World/cloud-native-shop/internal/platform/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -19,22 +21,34 @@ type Application interface {
 }
 
 type application struct {
-	conf        *config.Config
-	httpEngine  *gin.Engine
-	pgxPool     *pgxpool.Pool
-	redisClient *redis.Client
+	conf       *config.Config
+	log        *slog.Logger
+	httpEngine *gin.Engine
+	pool       *pgxpool.Pool
+	rdb        *redis.Client
 }
 
-func NewApplication(config *config.Config, pool *pgxpool.Pool, redis *redis.Client) Application {
+func NewApplication(config *config.Config, pool *pgxpool.Pool, redis *redis.Client, log *slog.Logger) Application {
+	if config.IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	engine := gin.New()
+	engine.Use(
+		middleware.RequestID(),
+		middleware.Logger(log),
+		middleware.Recovery(),
+	)
+
 	app := &application{
-		conf:        config,
-		httpEngine:  gin.Default(),
-		pgxPool:     pool,
-		redisClient: redis,
+		conf:       config,
+		log:        log,
+		httpEngine: engine,
+		pool:       pool,
+		rdb:        redis,
 	}
 
 	app.mapHnadler()
-
 	return app
 }
 
@@ -66,9 +80,9 @@ func (a *application) Run(ctx context.Context) error {
 		return fmt.Errorf("graceful shutdown failed: %w", err)
 	}
 
-	a.pgxPool.Close()
+	a.pool.Close()
 
-	if err := a.redisClient.Close(); err != nil {
+	if err := a.rdb.Close(); err != nil {
 		return fmt.Errorf("error closing redis: %w", err)
 	}
 

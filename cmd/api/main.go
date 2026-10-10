@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +13,7 @@ import (
 	"github.com/Hello256World/cloud-native-shop/internal/config"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/postgres"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/redis"
+	"github.com/Hello256World/cloud-native-shop/pkg/logger"
 )
 
 func main() {
@@ -26,6 +28,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+
+	log := logger.New(conf.Environment, conf.LogConfig.Level)
+	slog.SetDefault(log)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -51,7 +56,7 @@ func run() error {
 		return err
 	}
 
-	app := app.NewApplication(conf, postgresPool, redisClient)
+	app := app.NewApplication(conf, postgresPool, redisClient, log)
 
 	runCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
