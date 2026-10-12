@@ -19,6 +19,7 @@ func New(env, level string) *slog.Logger {
 	} else {
 		h = slog.NewTextHandler(os.Stdout, opts)
 	}
+
 	return slog.New(h)
 }
 

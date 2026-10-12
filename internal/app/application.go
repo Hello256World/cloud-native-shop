@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -21,11 +20,11 @@ type Application interface {
 }
 
 type application struct {
-	conf       *config.Config
-	log        *slog.Logger
-	httpEngine *gin.Engine
-	pool       *pgxpool.Pool
-	rdb        *redis.Client
+	conf        *config.Config
+	log         *slog.Logger
+	httpEngine  *gin.Engine
+	pgxPool     *pgxpool.Pool
+	redisClient *redis.Client
 }
 
 func NewApplication(config *config.Config, pool *pgxpool.Pool, redis *redis.Client, log *slog.Logger) Application {
@@ -41,14 +40,14 @@ func NewApplication(config *config.Config, pool *pgxpool.Pool, redis *redis.Clie
 	)
 
 	app := &application{
-		conf:       config,
-		log:        log,
-		httpEngine: engine,
-		pool:       pool,
-		rdb:        redis,
+		conf:        config,
+		log:         log,
+		httpEngine:  engine,
+		pgxPool:     pool,
+		redisClient: redis,
 	}
 
-	app.mapHnadler()
+	app.mapHandlers()
 	return app
 }
 
@@ -60,7 +59,7 @@ func (a *application) Run(ctx context.Context) error {
 
 	errChan := make(chan error, 1)
 	go func() {
-		log.Printf("server listening on %s", srv.Addr)
+		slog.Info(fmt.Sprintf("server listening on %s", srv.Addr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errChan <- err
 		}
@@ -70,7 +69,7 @@ func (a *application) Run(ctx context.Context) error {
 	case err := <-errChan:
 		return fmt.Errorf("server failed to start: %w", err)
 	case <-ctx.Done():
-		log.Printf("received signal \"%v\", shutting down", context.Cause(ctx))
+		slog.Info("received signal shutting down", "signal", context.Cause(ctx))
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -80,9 +79,9 @@ func (a *application) Run(ctx context.Context) error {
 		return fmt.Errorf("graceful shutdown failed: %w", err)
 	}
 
-	a.pool.Close()
+	a.pgxPool.Close()
 
-	if err := a.rdb.Close(); err != nil {
+	if err := a.redisClient.Close(); err != nil {
 		return fmt.Errorf("error closing redis: %w", err)
 	}
 

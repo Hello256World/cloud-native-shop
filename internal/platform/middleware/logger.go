@@ -32,7 +32,7 @@ func Logger(base *slog.Logger) gin.HandlerFunc {
 			"ip", c.ClientIP(),
 			"size", c.Writer.Size(),
 		}
-		
+
 		switch {
 		case status >= 500:
 			l.Error("http request", attrs...)

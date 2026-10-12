@@ -1,18 +1,41 @@
 package apierrors
 
+import "errors"
+
+type Kind int
+
+const (
+	KindInternal Kind = iota
+	KindInvalidInput
+	KindNotFound
+	KindConflict
+	KindUnauthorized
+	KindForbidden
+	KindUnimplemented
+)
+
 type APIError interface {
-	Error() string
+	error
+	Kind() Kind
+	Code() string
 	Message() string
-	StatusCode() int
 }
 
 type apiError struct {
-	XStatusCode int    `json:"-"`
-	XMessage    string `json:"message"`
+	kind    Kind
+	code    string
+	message string
 }
 
-func (e apiError) Error() string { return e.XMessage }
+func (e *apiError) Error() string   { return e.message }
+func (e *apiError) Kind() Kind      { return e.kind }
+func (e *apiError) Code() string    { return e.code }
+func (e *apiError) Message() string { return e.message }
 
-func (e apiError) Message() string { return e.XMessage }
-
-func (e apiError) StatusCode() int { return e.XStatusCode }
+func (e *apiError) Is(target error) bool {
+	var t *apiError
+	if errors.As(target, &t) {
+		return e.code == t.code
+	}
+	return false
+}

@@ -1,44 +1,31 @@
 package apierrors
 
-import (
-	"errors"
-	"net/http"
-)
+import "errors"
 
-func NewAPIError(statusCode int, msg string) APIError {
-	return apiError{
-		XStatusCode: statusCode,
-		XMessage:    msg,
-	}
+func New(kind Kind, code, message string) APIError {
+	return &apiError{kind: kind, code: code, message: message}
 }
 
-func NewBadRequestError(message string) APIError { return NewAPIError(http.StatusBadRequest, message) }
-
-func NewNotFoundError(message string) APIError { return NewAPIError(http.StatusNotFound, message) }
-
-func NewInternalServerError(message string) APIError {
-	return NewAPIError(http.StatusInternalServerError, message)
+func NewBadRequestError(code, message string) APIError   { return New(KindInvalidInput, code, message) }
+func NewNotFoundError(code, message string) APIError     { return New(KindNotFound, code, message) }
+func NewConflictError(code, message string) APIError     { return New(KindConflict, code, message) }
+func NewUnauthorizedError(code, message string) APIError { return New(KindUnauthorized, code, message) }
+func NewForbiddenError(code, message string) APIError    { return New(KindForbidden, code, message) }
+func NewUnimplementedError(code, message string) APIError {
+	return New(KindUnimplemented, code, message)
 }
 
-func NewUnauthorizedError(message string) APIError {
-	return NewAPIError(http.StatusUnauthorized, message)
-}
-
-func NewForbiddenError(message string) APIError { return NewAPIError(http.StatusForbidden, message) }
-
-func NewUnimplementedError(message string) APIError {
-	return NewAPIError(http.StatusNotImplemented, message)
+func NewInternalServerError() APIError {
+	return New(KindInternal, "internal_error", "internal server error")
 }
 
 func FromError(err error) APIError {
 	if err == nil {
 		return nil
 	}
-
 	var apiErr APIError
-	if !errors.As(err, &apiErr) {
-		return NewInternalServerError(err.Error())
+	if errors.As(err, &apiErr) {
+		return apiErr
 	}
-
-	return apiErr
+	return NewInternalServerError()
 }
