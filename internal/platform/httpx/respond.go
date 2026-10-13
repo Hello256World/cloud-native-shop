@@ -1,4 +1,3 @@
-// internal/platform/httpx/respond.go
 package httpx
 
 import (
