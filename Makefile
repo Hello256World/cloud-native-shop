@@ -67,3 +67,8 @@ create-migrate:
 
 get-migrate:
 	go get -tool github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+
+.PHONY: sqlc
+sqlc:
+	go tool sqlc generate
