@@ -13,8 +13,18 @@ import (
 	"github.com/Hello256World/cloud-native-shop/internal/platform/postgres"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/redis"
 	"github.com/Hello256World/cloud-native-shop/pkg/logger"
+	_ "github.com/Hello256World/cloud-native-shop/docs"
 )
 
+// @title           Cloud Native Shop API
+// @version         1.0
+// @description     Modular monolith e-commerce backend.
+// @BasePath        /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer <access_token>"
 func main() {
 	if err := run(); err != nil {
 		slog.Error("operation failed", "error", err)

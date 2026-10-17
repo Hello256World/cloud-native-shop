@@ -18,7 +18,7 @@ func Connect(ctx context.Context, opt Options) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig(opt.URI)
 
 	if err != nil {
-		return nil, fmt.Errorf("error parsing config for postgres pool: %v", err)
+		return nil, fmt.Errorf("error parsing config for postgres pool: %w", err)
 	}
 
 	poolConfig.MinConns = opt.MinPoolSize
@@ -27,12 +27,12 @@ func Connect(ctx context.Context, opt Options) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating postgres pool: %v", err)
+		return nil, fmt.Errorf("error creating postgres pool: %w", err)
 	}
 
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("error ping postgres pool: %v", err)
+		return nil, fmt.Errorf("error ping postgres pool: %w", err)
 	}
 
 	return pool, nil

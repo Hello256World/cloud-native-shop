@@ -1,0 +1,19 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Modular monolith e-commerce backend.",
+        "title": "Cloud Native Shop API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer \u003caccess_token\u003e\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

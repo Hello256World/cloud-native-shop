@@ -72,3 +72,13 @@ get-migrate:
 .PHONY: sqlc
 sqlc:
 	go tool sqlc generate
+
+.PHONY: swag
+## Generate OpenAPI docs into ./docs
+swag:
+	go tool swag init -g cmd/api/main.go --parseInternal
+
+
+.PHONY: lint
+lint:
+	golangci-lint run ./...
