@@ -18,7 +18,7 @@ const (
 )
 
 type User struct {
-	ID           uint64
+	ID           int64
 	FullName     string
 	Email        *string
 	Phone        string

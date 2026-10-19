@@ -3,8 +3,8 @@ package domain
 import "time"
 
 type Address struct {
-	ID           uint64
-	UserID       uint64
+	ID           int64
+	UserID       int64
 	ReceiverName string
 	Phone        string
 	Address      string

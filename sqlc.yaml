@@ -13,6 +13,17 @@ sql:
         sql_package: pgx/v5
         emit_json_tags: false
         overrides:
+          - db_type: date
+            nullable: true
+            go_type:
+              import: time
+              type: Time
+              pointer: true
+          - db_type: text
+            nullable: true
+            go_type:
+              type: string
+              pointer: true
           - db_type: timestamptz
             go_type: time.Time
           - db_type: timestamptz

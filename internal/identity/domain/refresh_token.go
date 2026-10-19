@@ -3,8 +3,8 @@ package domain
 import "time"
 
 type RefreshToken struct {
-	ID        uint64
-	UserID    uint64
+	ID        int64
+	UserID    int64
 	TokenHash string
 	ExpiresAt time.Time
 	RevokedAt *time.Time

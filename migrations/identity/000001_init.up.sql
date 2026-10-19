@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS identity;
 
-CREATE TYPE identity.gender AS ENUM ('male', 'female', 'other');
+CREATE TYPE identity.gender AS ENUM ('male', 'female');
 
 CREATE TABLE identity.roles (
   id   smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

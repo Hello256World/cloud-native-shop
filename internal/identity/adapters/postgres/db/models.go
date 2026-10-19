@@ -8,8 +8,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type IdentityGender string
@@ -17,7 +15,6 @@ type IdentityGender string
 const (
 	IdentityGenderMale   IdentityGender = "male"
 	IdentityGenderFemale IdentityGender = "female"
-	IdentityGenderOther  IdentityGender = "other"
 )
 
 func (e *IdentityGender) Scan(src interface{}) error {
@@ -61,9 +58,9 @@ type IdentityAddress struct {
 	ReceiverName string
 	Phone        string
 	Address      string
-	PostalCode   pgtype.Text
-	No           pgtype.Text
-	Unit         pgtype.Text
+	PostalCode   *string
+	No           *string
+	Unit         *string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
@@ -88,8 +85,8 @@ type IdentityUser struct {
 	FullName     string
 	Email        *string
 	Phone        string
-	PasswordHash pgtype.Text
-	Birthday     pgtype.Date
+	PasswordHash *string
+	Birthday     *time.Time
 	Gender       NullIdentityGender
 	IsActive     bool
 	CreatedAt    time.Time
