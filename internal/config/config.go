@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kkyr/fig"
@@ -16,6 +17,7 @@ type Config struct {
 	RedisConfig    RedisConfig    `fig:"redis" validate:"required"`
 	HTTPConfig     ServerConfig   `fig:"http" validate:"required"`
 	LogConfig      LogConfig      `fig:"log" validate:"required"`
+	AuthConfig     AuthConfig     `fig:"auth" validate:"required"`
 }
 
 func (c Config) IsProduction() bool {
@@ -24,6 +26,13 @@ func (c Config) IsProduction() bool {
 
 type LogConfig struct {
 	Level string `fig:"level" validate:"required"`
+}
+
+type AuthConfig struct {
+	Issuer          string        `fig:"issuer" validate:"required"`
+	AccessTokenTTL  time.Duration `fig:"accessTokenTTL" validate:"required"`
+	RefreshTokenTTL time.Duration `fig:"refreshTokenTTL" validate:"required"`
+	JWTSecret       string        `fig:"jwtSecret"`
 }
 
 type PostgresConfig struct {
@@ -101,6 +110,13 @@ func GetConfig() (*Config, error) {
 
 	if config.PostgresConfig.Password == "" {
 		config.PostgresConfig.Password = os.Getenv("POSTGRES_PASSWORD")
+	}
+
+	if config.AuthConfig.JWTSecret == "" {
+		config.AuthConfig.JWTSecret = os.Getenv("JWT_SECRET")
+	}
+	if len(config.AuthConfig.JWTSecret) < 32 {
+		return nil, fmt.Errorf("JWT_SECRET must be at least 32 bytes")
 	}
 
 	return &config, nil

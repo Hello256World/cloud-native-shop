@@ -22,3 +22,8 @@ redis:
 
 log:
   level: debug
+
+auth:
+  issuer: cloud-native-shop
+  accessTokenTTL: 15m
+  refreshTokenTTL: 720h # 30 days
