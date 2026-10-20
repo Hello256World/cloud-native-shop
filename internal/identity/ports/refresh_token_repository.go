@@ -8,7 +8,7 @@ import (
 )
 
 type RefreshTokenRepository interface {
-	Create(context.Context, int64, string, time.Time) error
-	GetByHash(context.Context, string) (*domain.RefreshToken, error)
-	Revoke(context.Context, int64) error
+	Create(ctx context.Context, userID int64, tokenHash string, expiresAt time.Time) error
+	GetByHash(ctx context.Context, tokenHash string) (*domain.RefreshToken, error)
+	Revoke(ctx context.Context, id int64) error
 }
