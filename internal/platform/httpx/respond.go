@@ -9,11 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type errorBody struct {
-	Error errorDetail `json:"error"`
+type ErrorBody struct {
+	Error ErrorDetail `json:"error"`
 }
 
-type errorDetail struct {
+type ErrorDetail struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
@@ -48,7 +48,7 @@ func Respond(c *gin.Context, err error) {
 		slog.Any("error", err),
 	)
 
-	c.AbortWithStatusJSON(status, errorBody{
-		Error: errorDetail{Code: apiErr.Code(), Message: apiErr.Message()},
+	c.AbortWithStatusJSON(status, ErrorBody{
+		Error: ErrorDetail{Code: apiErr.Code(), Message: apiErr.Message()},
 	})
 }

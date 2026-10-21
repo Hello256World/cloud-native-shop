@@ -37,6 +37,7 @@ func (h *Handler) readiness(c *gin.Context) {
 	for _, ch := range h.checkers {
 		if err := ch.Check(ctx); err != nil {
 			results[ch.Name()] = "down"
+			ok = false
 			logger.FromContext(c.Request.Context()).Warn("readiness check failed", "dependency", ch.Name(), "error", err)
 			continue
 		}

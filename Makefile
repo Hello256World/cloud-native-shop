@@ -82,3 +82,7 @@ swag:
 .PHONY: lint
 lint:
 	golangci-lint run ./...
+
+
+random-base64:
+	openssl rand -base64 48

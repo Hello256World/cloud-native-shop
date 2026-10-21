@@ -29,7 +29,7 @@ func (r *addressRepository) Create(c context.Context, address *domain.Address) (
 	q := r.q(c)
 
 	row, err := q.InsertAddress(c, db.InsertAddressParams{
-		UserID:       address.ID,
+		UserID:       address.UserID,
 		ReceiverName: address.ReceiverName,
 		Phone:        address.Phone,
 		Address:      address.Address,
@@ -111,7 +111,7 @@ func (r *addressRepository) Delete(c context.Context, userID, id int64) error {
 func addressToDomain(row db.IdentityAddress) *domain.Address {
 	return &domain.Address{
 		ID:           row.ID,
-		UserID:       row.ID,
+		UserID:       row.UserID,
 		ReceiverName: row.ReceiverName,
 		Phone:        row.Phone,
 		Address:      row.Address,

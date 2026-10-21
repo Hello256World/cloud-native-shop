@@ -11,13 +11,13 @@ import (
 )
 
 func WireHealth(engine *gin.Engine, pool *pgxpool.Pool, rds *redis.Client) {
-	healthHandler := health.NewHandler(2*time.Second, health.NewChecker("postgres", func(ctx context.Context) error {
-		return pool.Ping(ctx)
-	}),
+	healthHandler := health.NewHandler(2*time.Second,
+		health.NewChecker("postgres", func(ctx context.Context) error {
+			return pool.Ping(ctx)
+		}),
 		health.NewChecker("redis", func(ctx context.Context) error {
 			return rds.Ping(ctx).Err()
 		}),
 	)
-
 	healthHandler.Register(engine)
 }

@@ -16,7 +16,7 @@ type Service struct {
 	now        func() time.Time
 }
 
-func NewService(users ports.UserRepository, refresh ports.RefreshTokenRepository, hasher ports.PasswordHasher, tokens ports.AccessTokenIssuer, tx ports.TxManager, refreshTTL time.Duration, now func() time.Time) *Service {
+func NewService(users ports.UserRepository, refresh ports.RefreshTokenRepository, hasher ports.PasswordHasher, tokens ports.AccessTokenIssuer, tx ports.TxManager, refreshTTL time.Duration) *Service {
 	return &Service{
 		users:      users,
 		refresh:    refresh,
@@ -24,6 +24,6 @@ func NewService(users ports.UserRepository, refresh ports.RefreshTokenRepository
 		tokens:     tokens,
 		tx:         tx,
 		refreshTTL: refreshTTL,
-		now:        now,
+		now:        time.Now,
 	}
 }

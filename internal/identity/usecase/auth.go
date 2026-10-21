@@ -88,17 +88,17 @@ func (s *Service) Refresh(c context.Context, raw string) (*TokenPair, error) {
 	var pair *TokenPair
 
 	err := s.tx.WithinTx(c, func(ctx context.Context) error {
-		rt, err := s.refresh.GetByHash(c, hashToken(raw))
+		rt, err := s.refresh.GetByHash(ctx, hashToken(raw))
 
 		if err != nil {
 			return err
 		}
 
-		if rt.IsUsable(s.now()) {
+		if !rt.IsUsable(s.now()) {
 			return domain.ErrRefreshTokenInvalid
 		}
 
-		u, err := s.users.GetByID(c, rt.UserID)
+		u, err := s.users.GetByID(ctx, rt.UserID)
 		if err != nil {
 			if errors.Is(err, domain.ErrUserNotFound) {
 				return domain.ErrRefreshTokenInvalid
@@ -110,11 +110,11 @@ func (s *Service) Refresh(c context.Context, raw string) (*TokenPair, error) {
 			return domain.ErrUserInactive
 		}
 
-		if err := s.refresh.Revoke(c, rt.ID); err != nil {
+		if err := s.refresh.Revoke(ctx, rt.ID); err != nil {
 			return err
 		}
 
-		pair, err = s.issuePair(c, u, rt.ExpiresAt)
+		pair, err = s.issuePair(ctx, u, rt.ExpiresAt)
 
 		return err
 	})
