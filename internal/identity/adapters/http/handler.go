@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hello256World/cloud-native-shop/internal/identity/domain"
 	"github.com/Hello256World/cloud-native-shop/internal/identity/usecase"
+	"github.com/Hello256World/cloud-native-shop/internal/platform/auth"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/httpx"
 	"github.com/Hello256World/cloud-native-shop/pkg/apierrors"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,7 @@ type authService interface {
 	Login(ctx context.Context, phone, password string) (*usecase.TokenPair, error)
 	Refresh(context.Context, string) (*usecase.TokenPair, error)
 	Logout(context.Context, string) error
+	Me(context.Context, int64) (*domain.User, error)
 }
 
 type Handler struct {
@@ -91,7 +93,7 @@ func (h *Handler) Login(c *gin.Context) {
 		httpx.Respond(c, toAPIError(err))
 		return
 	}
-	c.JSON(http.StatusAccepted, toTokenResponse(token))
+	c.JSON(http.StatusOK, toTokenResponse(token))
 }
 
 // Refresh godoc
@@ -110,7 +112,6 @@ func (h *Handler) Refresh(c *gin.Context) {
 	if !bind(c, &req) {
 		return
 	}
-
 	token, err := h.svc.Refresh(c.Request.Context(), req.RefreshToken)
 
 	if err != nil {
@@ -142,4 +143,31 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// Me godoc
+// @Summary     Current user profile
+// @Tags        me
+// @Produce     json
+// @Security    BearerAuth
+// @Success     200 {object} UserResponse
+// @Failure     401 {object} httpx.ErrorBody
+// @Failure     404 {object} httpx.ErrorBody
+// @Router      /me [get]
+func (h *Handler) Me(c *gin.Context) {
+	p, ok := auth.FromContext(c.Request.Context())
+
+	if !ok {
+		httpx.Respond(c, apierrors.NewUnauthorizedError("missing_token", "authentication required"))
+		return
+	}
+
+	u, err := h.svc.Me(c.Request.Context(), p.UserID)
+
+	if err != nil {
+		httpx.Respond(c, toAPIError(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, toUserResponse(u))
 }

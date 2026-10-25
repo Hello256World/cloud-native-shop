@@ -200,6 +200,28 @@ paths:
       summary: Register a new customer
       tags:
       - auth
+  /me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Current user profile
+      tags:
+      - me
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer <access_token>"

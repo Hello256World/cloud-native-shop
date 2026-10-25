@@ -3,19 +3,19 @@ package http
 import "time"
 
 type RegisterRequest struct {
-	FullName string  `json:"full_name" binding:"required,min=2,max=100"`
-	Phone    string  `json:"phone" binding:"required,numeric,min=10,max=15"`
-	Email    *string `json:"email" binding:"omitempty,email,max=254"`
-	Password string  `json:"password" binding:"required,min=8,max=128"`
+	FullName string  `json:"full_name" form:"full_name" binding:"required,min=2,max=100"`
+	Phone    string  `json:"phone" form:"phone" binding:"required,numeric,min=10,max=15"`
+	Email    *string `json:"email" form:"email" binding:"omitempty,email,max=254"`
+	Password string  `json:"password" form:"password" binding:"required,min=8,max=128"`
 }
 
 type LoginRequest struct {
-	Phone    string `json:"phone" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Phone    string `json:"phone" form:"phone" binding:"required"`
+	Password string `json:"password" form:"password" binding:"required"`
 }
 
 type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+	RefreshToken string `json:"refresh_token" form:"refresh_token" binding:"required"`
 }
 
 type UserResponse struct {

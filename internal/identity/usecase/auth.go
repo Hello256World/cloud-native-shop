@@ -166,3 +166,4 @@ func (s *Service) issuePair(c context.Context, user *domain.User, refreshExpires
 		RefreshExpiresAt: refreshExpiresAt,
 	}, nil
 }
+

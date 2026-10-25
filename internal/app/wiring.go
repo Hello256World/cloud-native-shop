@@ -16,5 +16,5 @@ func (a *application) mapHandlers() {
 
 	// version one
 	api := a.httpEngine.Group("/api/v1")
-	bootstrap.WireIdentity(api, a.pgxPool, tm, a.conf.AuthConfig)
+	bootstrap.WireIdentity(api, a.pgxPool, tm, a.conf.AuthConfig.RefreshTokenTTL)
 }
