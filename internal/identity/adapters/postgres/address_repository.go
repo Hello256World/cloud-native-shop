@@ -51,10 +51,6 @@ func (r *addressRepository) ListByUser(c context.Context, userID int64) ([]domai
 	rows, err := q.ListAddressesByUser(c, userID)
 
 	if err != nil {
-		if isNoRows(err) {
-			return nil, domain.ErrAddressNotFound
-		}
-
 		return nil, fmt.Errorf("identity.repo.Address.ListByUser user=%d: %w", userID, err)
 	}
 

@@ -34,3 +34,24 @@ type TokenResponse struct {
 	RefreshToken     string    `json:"refresh_token"`
 	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
 }
+
+type AddressRequest struct {
+	ReceiverName string  `json:"receiver_name" form:"receiver_name" binding:"required,min=2,max=100"`
+	Phone        string  `json:"phone" form:"phone" binding:"required,numeric,min=10,max=15"`
+	Address      string  `json:"address" form:"address" binding:"required,min=5,max=500"`
+	PostalCode   *string `json:"postal_code" form:"postal_code" binding:"omitempty,numeric,len=10"`
+	No           *string `json:"no" form:"no" binding:"omitempty,max=20"`
+	Unit         *string `json:"unit" form:"unit" binding:"omitempty,max=20"`
+}
+
+type AddressResponse struct {
+	ID           int64     `json:"id"`
+	ReceiverName string    `json:"receiver_name"`
+	Phone        string    `json:"phone"`
+	Address      string    `json:"address"`
+	PostalCode   *string   `json:"postal_code,omitempty"`
+	No           *string   `json:"no,omitempty"`
+	Unit         *string   `json:"unit,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}

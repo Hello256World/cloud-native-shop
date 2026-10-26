@@ -31,3 +31,27 @@ func toTokenResponse(p *usecase.TokenPair) TokenResponse {
 		RefreshExpiresAt: p.RefreshExpiresAt,
 	}
 }
+
+func toAddressResponse(a *domain.Address) AddressResponse {
+	return AddressResponse{
+		ID:           a.ID,
+		ReceiverName: a.ReceiverName,
+		Phone:        a.Phone,
+		Address:      a.Address,
+		PostalCode:   a.PostalCode,
+		No:           a.No,
+		Unit:         a.Unit,
+		CreatedAt:    a.CreatedAt,
+		UpdatedAt:    a.UpdatedAt,
+	}
+}
+
+func toAddressListResponse(list []domain.Address) []AddressResponse {
+	addresses := make([]AddressResponse, len(list))
+
+	for i, val := range list {
+		addresses[i] = toAddressResponse(&val)
+	}
+
+	return addresses
+}

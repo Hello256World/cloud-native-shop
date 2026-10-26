@@ -14,8 +14,9 @@ type ErrorBody struct {
 }
 
 type ErrorDetail struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Fields  []apierrors.FieldError `json:"fields,omitempty"`
 }
 
 func statusAndLevel(k apierrors.Kind) (int, slog.Level) {
@@ -49,6 +50,6 @@ func Respond(c *gin.Context, err error) {
 	)
 
 	c.AbortWithStatusJSON(status, ErrorBody{
-		Error: ErrorDetail{Code: apiErr.Code(), Message: apiErr.Message()},
+		Error: ErrorDetail{Code: apiErr.Code(), Message: apiErr.Message(), Fields: apiErr.Details()},
 	})
 }

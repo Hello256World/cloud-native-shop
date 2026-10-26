@@ -6,9 +6,7 @@ import (
 
 	"github.com/Hello256World/cloud-native-shop/internal/identity/domain"
 	"github.com/Hello256World/cloud-native-shop/internal/identity/usecase"
-	"github.com/Hello256World/cloud-native-shop/internal/platform/auth"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/httpx"
-	"github.com/Hello256World/cloud-native-shop/pkg/apierrors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,22 +18,11 @@ type authService interface {
 	Me(context.Context, int64) (*domain.User, error)
 }
 
-type Handler struct {
+type AuthHandler struct {
 	svc authService
 }
 
-func NewHandler(svc authService) *Handler { return &Handler{svc: svc} }
-
-func bind(c *gin.Context, req any) bool {
-	if err := c.ShouldBind(req); err != nil {
-		httpx.Respond(c, apierrors.Wrap(
-			apierrors.NewBadRequestError("invalid_request", "invalid request body"), err))
-
-		return false
-	}
-
-	return true
-}
+func NewAuthHandler(svc authService) *AuthHandler { return &AuthHandler{svc: svc} }
 
 // Register godoc
 // @Summary     Register a new customer
@@ -47,7 +34,7 @@ func bind(c *gin.Context, req any) bool {
 // @Failure     400 {object} httpx.ErrorBody
 // @Failure     409 {object} httpx.ErrorBody
 // @Router      /auth/register [post]
-func (h *Handler) Register(c *gin.Context) {
+func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 
 	if !bind(c, &req) {
@@ -80,7 +67,7 @@ func (h *Handler) Register(c *gin.Context) {
 // @Failure     401 {object} httpx.ErrorBody
 // @Failure     403 {object} httpx.ErrorBody
 // @Router      /auth/login [post]
-func (h *Handler) Login(c *gin.Context) {
+func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 
 	if !bind(c, &req) {
@@ -106,7 +93,7 @@ func (h *Handler) Login(c *gin.Context) {
 // @Failure     400 {object} httpx.ErrorBody
 // @Failure     401 {object} httpx.ErrorBody
 // @Router      /auth/refresh [post]
-func (h *Handler) Refresh(c *gin.Context) {
+func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 
 	if !bind(c, &req) {
@@ -130,7 +117,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 // @Success     204
 // @Failure     400 {object} httpx.ErrorBody
 // @Router      /auth/logout [post]
-func (h *Handler) Logout(c *gin.Context) {
+func (h *AuthHandler) Logout(c *gin.Context) {
 	var req RefreshRequest
 
 	if !bind(c, &req) {
@@ -154,16 +141,13 @@ func (h *Handler) Logout(c *gin.Context) {
 // @Failure     401 {object} httpx.ErrorBody
 // @Failure     404 {object} httpx.ErrorBody
 // @Router      /me [get]
-func (h *Handler) Me(c *gin.Context) {
-	p, ok := auth.FromContext(c.Request.Context())
-
+func (h *AuthHandler) Me(c *gin.Context) {
+	userID, ok := currentUserID(c)
 	if !ok {
-		httpx.Respond(c, apierrors.NewUnauthorizedError("missing_token", "authentication required"))
 		return
 	}
 
-	u, err := h.svc.Me(c.Request.Context(), p.UserID)
-
+	u, err := h.svc.Me(c.Request.Context(), userID)
 	if err != nil {
 		httpx.Respond(c, toAPIError(err))
 		return

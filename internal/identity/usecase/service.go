@@ -9,6 +9,7 @@ import (
 type Service struct {
 	users      ports.UserRepository
 	refresh    ports.RefreshTokenRepository
+	address    ports.AddressRepository
 	hasher     ports.PasswordHasher
 	tokens     ports.AccessTokenIssuer
 	tx         ports.TxManager
@@ -16,10 +17,11 @@ type Service struct {
 	now        func() time.Time
 }
 
-func NewService(users ports.UserRepository, refresh ports.RefreshTokenRepository, hasher ports.PasswordHasher, tokens ports.AccessTokenIssuer, tx ports.TxManager, refreshTTL time.Duration) *Service {
+func NewService(users ports.UserRepository, refresh ports.RefreshTokenRepository, address ports.AddressRepository, hasher ports.PasswordHasher, tokens ports.AccessTokenIssuer, tx ports.TxManager, refreshTTL time.Duration) *Service {
 	return &Service{
 		users:      users,
 		refresh:    refresh,
+		address:    address,
 		hasher:     hasher,
 		tokens:     tokens,
 		tx:         tx,

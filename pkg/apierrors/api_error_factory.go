@@ -14,6 +14,14 @@ func NewForbiddenError(code, message string) APIError    { return New(KindForbid
 func NewUnimplementedError(code, message string) APIError {
 	return New(KindUnimplemented, code, message)
 }
+func NewValidationError(details []FieldError) APIError {
+	return &apiError{
+		kind:    KindInvalidInput,
+		code:    "validation_failed",
+		message: "request validation failed",
+		details: details,
+	}
+}
 
 func NewInternalServerError() APIError {
 	return New(KindInternal, "internal_error", "internal server error")

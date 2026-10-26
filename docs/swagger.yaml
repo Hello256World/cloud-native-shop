@@ -1,5 +1,53 @@
 basePath: /api/v1
 definitions:
+  http.AddressRequest:
+    properties:
+      address:
+        maxLength: 500
+        minLength: 5
+        type: string
+      "no":
+        maxLength: 20
+        type: string
+      phone:
+        maxLength: 15
+        minLength: 10
+        type: string
+      postal_code:
+        type: string
+      receiver_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      unit:
+        maxLength: 20
+        type: string
+    required:
+    - address
+    - phone
+    - receiver_name
+    type: object
+  http.AddressResponse:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      "no":
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      receiver_name:
+        type: string
+      unit:
+        type: string
+      updated_at:
+        type: string
+    type: object
   http.LoginRequest:
     properties:
       password:
@@ -220,6 +268,123 @@ paths:
       security:
       - BearerAuth: []
       summary: Current user profile
+      tags:
+      - me
+  /me/addresses:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.AddressResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: List my addresses
+      tags:
+      - me
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddressRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.AddressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Add an address
+      tags:
+      - me
+  /me/addresses/{id}:
+    delete:
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Delete an address
+      tags:
+      - me
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.AddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.AddressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Replace an address
       tags:
       - me
 securityDefinitions:
