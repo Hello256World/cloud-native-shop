@@ -2,7 +2,7 @@ package http
 
 import "github.com/gin-gonic/gin"
 
-func RegisterRoutes(api *gin.RouterGroup, authH *AuthHandler, addH *AddressHandler, authMW gin.HandlerFunc) {
+func RegisterRoutes(api *gin.RouterGroup, authH *AuthHandler, addrH *AddressHandler, authMW gin.HandlerFunc) {
 	auth := api.Group("/auth")
 	auth.POST("/register", authH.Register)
 	auth.POST("/login", authH.Login)
@@ -13,8 +13,8 @@ func RegisterRoutes(api *gin.RouterGroup, authH *AuthHandler, addH *AddressHandl
 	me.GET("", authH.Me)
 
 	addrs := me.Group("/addresses")
-	addrs.POST("", addH.Create)
-	addrs.GET("", addH.List)
-	addrs.PUT("/:id", addH.Update)
-	addrs.DELETE("/:id", addH.Delete)
+	addrs.POST("", addrH.Create)
+	addrs.GET("", addrH.List)
+	addrs.PUT("/:id", addrH.Update)
+	addrs.DELETE("/:id", addrH.Delete)
 }
