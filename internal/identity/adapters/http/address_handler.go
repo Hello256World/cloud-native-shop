@@ -12,7 +12,7 @@ import (
 
 type addressService interface {
 	AddAddress(c context.Context, userID int64, in usecase.AddressInput) (*domain.Address, error)
-	ListAddress(c context.Context, userID int64) ([]domain.Address, error)
+	ListAddresses(c context.Context, userID int64) ([]domain.Address, error)
 	UpdateAddress(c context.Context, userID, id int64, in usecase.AddressInput) (*domain.Address, error)
 	DeleteAddress(c context.Context, userID, id int64) error
 }
@@ -83,7 +83,7 @@ func (h *AddressHandler) List(c *gin.Context) {
 		return
 	}
 
-	addrs, err := h.svc.ListAddress(c.Request.Context(), id)
+	addrs, err := h.svc.ListAddresses(c.Request.Context(), id)
 
 	if err != nil {
 		httpx.Respond(c, toAPIError(err))

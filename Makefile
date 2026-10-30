@@ -86,3 +86,7 @@ lint:
 
 random-base64:
 	openssl rand -base64 48
+
+.PHONY: seed-superadmin
+seed-superadmin:
+	go run ./cmd/seed

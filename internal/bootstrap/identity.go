@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func WireIdentity(api *gin.RouterGroup, pool *pgxpool.Pool, conf config.AuthConfig) {
+func newIdentity(pool *pgxpool.Pool, conf config.AuthConfig) (*usecase.Service, *auth.TokenManager) {
 	tm := auth.NewTokenManager(conf.JWTSecret, conf.Issuer, conf.AccessTokenTTL)
 
 	uc := usecase.NewService(
@@ -26,6 +26,17 @@ func WireIdentity(api *gin.RouterGroup, pool *pgxpool.Pool, conf config.AuthConf
 		postgres.NewTxManager(pool),
 		conf.RefreshTokenTTL,
 	)
+
+	return uc, tm
+}
+
+func NewIdentityService(pool *pgxpool.Pool, conf config.AuthConfig) *usecase.Service {
+	uc, _ := newIdentity(pool, conf)
+	return uc
+}
+
+func WireIdentity(api *gin.RouterGroup, pool *pgxpool.Pool, conf config.AuthConfig) {
+	uc, tm := newIdentity(pool, conf)
 
 	identityhttp.RegisterRoutes(api, identityhttp.NewAuthHandler(uc), identityhttp.NewAddressHandler(uc), middleware.Auth(tm))
 }

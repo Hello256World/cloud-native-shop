@@ -32,7 +32,7 @@ func (s *Service) AddAddress(c context.Context, userID int64, in AddressInput) (
 	return s.address.Create(c, in.toDomain(userID, 0))
 }
 
-func (s *Service) ListAddress(c context.Context, userID int64) ([]domain.Address, error) {
+func (s *Service) ListAddresses(c context.Context, userID int64) ([]domain.Address, error) {
 	return s.address.ListByUser(c, userID)
 }
 
