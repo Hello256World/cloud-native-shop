@@ -70,7 +70,7 @@ func (s *Service) ListCategories(c context.Context) ([]domain.Category, error) {
 	return s.categories.ListAll(c)
 }
 
-func (s *Service) ListPublicCategories(c context.Context) ([]domain.Category, error) { // TODO: ino Bekhon
+func (s *Service) ListPublicCategories(c context.Context) ([]domain.Category, error) { 
 	all, err := s.categories.ListActive(c)
 	if err != nil {
 		return nil, err
