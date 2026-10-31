@@ -37,7 +37,7 @@ func NewAuthHandler(svc authService) *AuthHandler { return &AuthHandler{svc: svc
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 	token, err := h.svc.Refresh(c.Request.Context(), req.RefreshToken)
@@ -120,7 +120,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	var req RefreshRequest
 
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 
@@ -142,7 +142,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Failure     404 {object} httpx.ErrorBody
 // @Router      /me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
-	userID, ok := currentUserID(c)
+	userID, ok := httpx.CurrentUserID(c)
 	if !ok {
 		return
 	}

@@ -61,6 +61,9 @@ func run() error {
 		Phone:    phone,
 		Password: password,
 	})
+	if err != nil {
+		return err
+	}
 
 	if created {
 		slog.Info("super admin created", "phone", phone)

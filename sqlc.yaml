@@ -4,6 +4,49 @@ sql:
   - engine: postgresql
     schema:
       - migrations/platform
+      - migrations/catalog
+    queries: internal/catalog/adapters/postgres/queries
+    gen:
+      go:
+        package: db
+        out: internal/catalog/adapters/postgres/db
+        sql_package: pgx/v5
+        emit_json_tags: false
+        overrides:
+          - db_type: date
+            nullable: true
+            go_type:
+              import: time
+              type: Time
+              pointer: true
+          - db_type: text
+            nullable: true
+            go_type:
+              type: string
+              pointer: true
+          - db_type: timestamptz
+            go_type: time.Time
+          - db_type: timestamptz
+            nullable: true
+            go_type:
+              import: time
+              type: Time
+              pointer: true
+          - db_type: citext
+            go_type: string
+          - db_type: citext
+            nullable: true
+            go_type:
+              type: string
+              pointer: true
+          - db_type: pg_catalog.int8
+            nullable: true
+            go_type:
+              type: int64
+              pointer: true
+  - engine: postgresql
+    schema:
+      - migrations/platform
       - migrations/identity
     queries: internal/identity/adapters/postgres/queries
     gen:

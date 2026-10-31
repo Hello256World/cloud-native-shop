@@ -48,13 +48,13 @@ func toAddressInput(r AddressRequest) usecase.AddressInput {
 // @Failure     401 {object} httpx.ErrorBody
 // @Router      /me/addresses [post]
 func (h *AddressHandler) Create(c *gin.Context) {
-	id, ok := currentUserID(c)
+	id, ok :=httpx.CurrentUserID(c)
 	if !ok {
 		return
 	}
 
 	var req AddressRequest
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *AddressHandler) Create(c *gin.Context) {
 // @Failure     401 {object} httpx.ErrorBody
 // @Router      /me/addresses [get]
 func (h *AddressHandler) List(c *gin.Context) {
-	id, ok := currentUserID(c)
+	id, ok := httpx.CurrentUserID(c)
 
 	if !ok {
 		return
@@ -107,13 +107,13 @@ func (h *AddressHandler) List(c *gin.Context) {
 // @Failure     404 {object} httpx.ErrorBody
 // @Router      /me/addresses/{id} [put]
 func (h *AddressHandler) Update(c *gin.Context) {
-	userID, ok := currentUserID(c)
+	userID, ok := httpx.CurrentUserID(c)
 
 	if !ok {
 		return
 	}
 
-	id, ok := pathID(c)
+	id, ok := httpx.PathID(c)
 
 	if !ok {
 		return
@@ -121,7 +121,7 @@ func (h *AddressHandler) Update(c *gin.Context) {
 
 	var req AddressRequest
 
-	if !bind(c, &req) {
+	if !httpx.Bind(c, &req) {
 		return
 	}
 
@@ -146,12 +146,12 @@ func (h *AddressHandler) Update(c *gin.Context) {
 // @Failure     404 {object} httpx.ErrorBody
 // @Router      /me/addresses/{id} [delete]
 func (h *AddressHandler) Delete(c *gin.Context) {
-	userID, ok := currentUserID(c)
+	userID, ok := httpx.CurrentUserID(c)
 	if !ok {
 		return
 	}
 
-	id, ok := pathID(c)
+	id, ok := httpx.PathID(c)
 	if !ok {
 		return
 	}

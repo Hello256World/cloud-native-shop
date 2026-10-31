@@ -14,8 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func newIdentity(pool *pgxpool.Pool, conf config.AuthConfig) (*usecase.Service, *auth.TokenManager) {
-	tm := auth.NewTokenManager(conf.JWTSecret, conf.Issuer, conf.AccessTokenTTL)
+func newIdentity(pool *pgxpool.Pool, conf config.AuthConfig, tm *auth.TokenManager) (*usecase.Service, *auth.TokenManager) {
+	// tm := auth.NewTokenManager(conf.JWTSecret, conf.Issuer, conf.AccessTokenTTL)
 
 	uc := usecase.NewService(
 		identitypg.NewUserRepository(pool),
@@ -31,12 +31,12 @@ func newIdentity(pool *pgxpool.Pool, conf config.AuthConfig) (*usecase.Service, 
 }
 
 func NewIdentityService(pool *pgxpool.Pool, conf config.AuthConfig) *usecase.Service {
-	uc, _ := newIdentity(pool, conf)
+	uc, _ := newIdentity(pool, conf, auth.NewTokenManager(conf.JWTSecret, conf.Issuer, conf.AccessTokenTTL))
 	return uc
 }
 
-func WireIdentity(api *gin.RouterGroup, pool *pgxpool.Pool, conf config.AuthConfig) {
-	uc, tm := newIdentity(pool, conf)
+func WireIdentity(api *gin.RouterGroup, pool *pgxpool.Pool, conf config.AuthConfig, tm *auth.TokenManager) {
+	uc, tm := newIdentity(pool, conf, tm)
 
 	identityhttp.RegisterRoutes(api, identityhttp.NewAuthHandler(uc), identityhttp.NewAddressHandler(uc), middleware.Auth(tm))
 }
