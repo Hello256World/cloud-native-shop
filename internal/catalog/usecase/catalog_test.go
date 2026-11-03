@@ -45,8 +45,12 @@ func (f *fakeCategories) list(onlyActive bool) []domain.Category {
 	return out
 }
 
-func (f *fakeCategories) ListAll(context.Context) ([]domain.Category, error)    { return f.list(false), nil }
-func (f *fakeCategories) ListActive(context.Context) ([]domain.Category, error) { return f.list(true), nil }
+func (f *fakeCategories) ListAll(context.Context) ([]domain.Category, error) {
+	return f.list(false), nil
+}
+func (f *fakeCategories) ListActive(context.Context) ([]domain.Category, error) {
+	return f.list(true), nil
+}
 
 func (f *fakeCategories) Update(_ context.Context, c *domain.Category) (*domain.Category, error) {
 	cp := *c
@@ -78,7 +82,7 @@ func (fakeTx) WithinTx(ctx context.Context, fn func(context.Context) error) erro
 
 func newSvc() (*Service, *fakeCategories) {
 	repo := newFakeCategories()
-	return NewService(repo, fakeTx{}), repo
+	return NewService(repo, nil, nil, fakeTx{}), repo
 }
 
 func mk(t *testing.T, s *Service, name string, parent *int64, active bool) *domain.Category {

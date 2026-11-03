@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/Hello256World/cloud-native-shop/docs"
 	"github.com/Hello256World/cloud-native-shop/internal/app"
 	"github.com/Hello256World/cloud-native-shop/internal/config"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/postgres"
 	"github.com/Hello256World/cloud-native-shop/internal/platform/redis"
 	"github.com/Hello256World/cloud-native-shop/pkg/logger"
-	_ "github.com/Hello256World/cloud-native-shop/docs"
 )
 
 // @title           Cloud Native Shop API

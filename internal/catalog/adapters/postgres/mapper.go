@@ -25,3 +25,45 @@ func categoriesToDomain(rows []db.CatalogCategory) []domain.Category {
 	}
 	return out
 }
+
+func productToDomain(p db.CatalogProduct) *domain.Product {
+	return &domain.Product{
+		ID:              p.ID,
+		CategoryID:      p.CategoryID,
+		Name:            p.Name,
+		Slug:            p.Slug,
+		Description:     p.Description,
+		Thumbnail:       p.Thumbnail,
+		ShipmentWeightG: p.ShipmentWeightG,
+		IsActive:        p.IsActive,
+		CreatedAt:       p.CreatedAt,
+		UpdatedAt:       p.UpdatedAt,
+	}
+}
+
+func variantToDomain(v db.CatalogProductVariant) domain.Variant {
+	return domain.Variant{
+		ID:        v.ID,
+		ProductID: v.ProductID,
+		SKU:       v.Sku,
+		Price:     v.Price,
+		IsActive:  v.IsActive,
+	}
+}
+
+func imageToDomain(i db.CatalogProductImage) domain.Image {
+	return domain.Image{
+		ID:        i.ID,
+		ImageName: i.ImageName,
+		Priority:  i.Priority,
+		IsActive:  i.IsActive,
+	}
+}
+
+func typeToDomain(t db.CatalogVariantType) domain.VariantType {
+	return domain.VariantType{ID: t.ID, Name: t.Name, DataType: t.DataType, DisplayOrder: t.DisplayOrder}
+}
+
+func valueToDomain(v db.CatalogVariantValue) domain.VariantValue {
+	return domain.VariantValue{ID: v.ID, TypeID: v.VariantTypeID, Value: v.Value, DisplayOrder: v.DisplayOrder}
+}

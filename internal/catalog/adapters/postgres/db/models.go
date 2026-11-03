@@ -39,7 +39,7 @@ type CatalogProduct struct {
 	Slug            string
 	Description     *string
 	Thumbnail       string
-	ShipmentWeightG int32
+	ShipmentWeightG int
 	IsActive        bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -50,7 +50,7 @@ type CatalogProductImage struct {
 	ID        int64
 	ProductID int64
 	ImageName string
-	Priority  int32
+	Priority  int
 	IsActive  bool
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -75,7 +75,7 @@ type CatalogVariantType struct {
 	ID           int64
 	Name         string
 	DataType     string
-	DisplayOrder int32
+	DisplayOrder int
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -84,7 +84,7 @@ type CatalogVariantValue struct {
 	ID            int64
 	VariantTypeID int64
 	Value         string
-	DisplayOrder  int32
+	DisplayOrder  int
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

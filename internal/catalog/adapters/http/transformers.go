@@ -27,3 +27,67 @@ func toCategoryListResponse(list []domain.Category) []CategoryResponse {
 	}
 	return out
 }
+
+func toVariantTypeResponse(t domain.VariantType) VariantTypeResponse {
+	vals := make([]VariantValueResponse, len(t.Values))
+	for i, v := range t.Values {
+		vals[i] = VariantValueResponse{ID: v.ID, Value: v.Value, DisplayOrder: v.DisplayOrder}
+	}
+	return VariantTypeResponse{
+		ID: t.ID, Name: t.Name, DataType: t.DataType, DisplayOrder: t.DisplayOrder, Values: vals,
+	}
+}
+
+func toProductInput(r ProductRequest) usecase.ProductInput {
+	return usecase.ProductInput{
+		CategoryID: r.CategoryID, Name: r.Name, Slug: r.Slug, Description: r.Description,
+		Thumbnail: r.Thumbnail, ShipmentWeightG: r.ShipmentWeightG, IsActive: r.IsActive,
+	}
+}
+
+func toVariantInput(r VariantRequest) usecase.VariantInput {
+	return usecase.VariantInput{SKU: r.SKU, Price: r.Price, IsActive: r.IsActive, ValueIDs: r.ValueIDs}
+}
+
+func toImageInput(r ImageRequest) usecase.ImageInput {
+	return usecase.ImageInput{ImageName: r.ImageName, Priority: r.Priority, IsActive: r.IsActive}
+}
+
+func toCreateProductInput(r CreateProductRequest) usecase.CreateProductInput {
+	in := usecase.CreateProductInput{ProductInput: toProductInput(r.ProductRequest)}
+	for _, v := range r.Variants {
+		in.Variants = append(in.Variants, toVariantInput(v))
+	}
+	for _, im := range r.Images {
+		in.Images = append(in.Images, toImageInput(im))
+	}
+	return in
+}
+
+func toVariantResponse(v domain.Variant) VariantResponse {
+	opts := make([]OptionResponse, len(v.Options))
+	for i, o := range v.Options {
+		opts[i] = OptionResponse{TypeID: o.TypeID, Type: o.Type, ValueID: o.ValueID, Value: o.Value}
+	}
+	return VariantResponse{ID: v.ID, SKU: v.SKU, Price: v.Price, IsActive: v.IsActive, Options: opts}
+}
+
+func toImageResponse(im domain.Image) ImageResponse {
+	return ImageResponse{ID: im.ID, ImageName: im.ImageName, Priority: im.Priority, IsActive: im.IsActive}
+}
+
+func toProductResponse(p *domain.Product) ProductResponse {
+	variants := make([]VariantResponse, len(p.Variants))
+	for i, v := range p.Variants {
+		variants[i] = toVariantResponse(v)
+	}
+	images := make([]ImageResponse, len(p.Images))
+	for i, im := range p.Images {
+		images[i] = toImageResponse(im)
+	}
+	return ProductResponse{
+		ID: p.ID, CategoryID: p.CategoryID, Name: p.Name, Slug: p.Slug, Description: p.Description,
+		Thumbnail: p.Thumbnail, ShipmentWeightG: p.ShipmentWeightG, IsActive: p.IsActive,
+		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,
+	}
+}

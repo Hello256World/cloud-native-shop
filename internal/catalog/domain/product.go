@@ -11,7 +11,7 @@ type Product struct {
 	Thumbnail       string
 	ShipmentWeightG int
 	IsActive        bool
-	Variant         []Variant
+	Variants         []Variant
 	Images          []Image
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

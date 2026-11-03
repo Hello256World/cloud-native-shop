@@ -42,11 +42,11 @@ func Bind(c *gin.Context, req any) bool {
 	if errors.As(err, &verrs) {
 		details := make([]apierrors.FieldError, len(verrs))
 		for i, fe := range verrs {
-			details[i] = apierrors.FieldError{
-				Field: fe.Field(),
-				Code:  fe.Tag(),
-				Param: fe.Param(),
+			field := fe.Namespace()
+			if j := strings.Index(field, "."); j >= 0 {
+				field = field[j+1:]
 			}
+			details[i] = apierrors.FieldError{Field: field, Code: fe.Tag(), Param: fe.Param()}
 		}
 		Respond(c, apierrors.Wrap(apierrors.NewValidationError(details), err))
 		return false
@@ -68,16 +68,15 @@ func CurrentUserID(c *gin.Context) (int64, bool) {
 	return p.UserID, true
 }
 
-func PathID(c *gin.Context) (int64, bool) {
-	raw := c.Param("id")
-
+func PathParamID(c *gin.Context, name string) (int64, bool) {
+	raw := c.Param(name)
 	id, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || id <= 0 {
-		Respond(c, apierrors.Wrap(
-			apierrors.NewBadRequestError("invalid_id", "invalid id"), fmt.Errorf("invalid path id %q", raw)))
-
+		Respond(c, apierrors.Wrap(apierrors.NewBadRequestError("invalid_id", "invalid id"),
+			fmt.Errorf("invalid path param %s=%q", name, raw)))
 		return 0, false
 	}
-
 	return id, true
 }
+
+func PathID(c *gin.Context) (int64, bool) { return PathParamID(c, "id") }

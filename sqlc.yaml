@@ -13,6 +13,8 @@ sql:
         sql_package: pgx/v5
         emit_json_tags: false
         overrides:
+          - db_type: pg_catalog.int4
+            go_type: int
           - db_type: date
             nullable: true
             go_type:

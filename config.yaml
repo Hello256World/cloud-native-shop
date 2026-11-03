@@ -25,5 +25,5 @@ log:
 
 auth:
   issuer: cloud-native-shop
-  accessTokenTTL: 15m
+  accessTokenTTL: 60m
   refreshTokenTTL: 720h # 30 days

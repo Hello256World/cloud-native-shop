@@ -97,6 +97,72 @@ definitions:
       updated_at:
         type: string
     type: object
+  http.CreateProductRequest:
+    properties:
+      category_id:
+        type: integer
+      description:
+        maxLength: 10000
+        type: string
+      images:
+        description: 'TODO: write div attr in the note'
+        items:
+          $ref: '#/definitions/http.ImageRequest'
+        maxItems: 20
+        type: array
+      is_active:
+        type: boolean
+      name:
+        maxLength: 200
+        minLength: 2
+        type: string
+      shipment_weight_g:
+        type: integer
+      slug:
+        maxLength: 220
+        minLength: 2
+        type: string
+      thumbnail:
+        maxLength: 255
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/http.VariantRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - category_id
+    - name
+    - shipment_weight_g
+    - slug
+    - thumbnail
+    - variants
+    type: object
+  http.ImageRequest:
+    properties:
+      image_name:
+        maxLength: 255
+        type: string
+      is_active:
+        type: boolean
+      priority:
+        minimum: 0
+        type: integer
+    required:
+    - image_name
+    type: object
+  http.ImageResponse:
+    properties:
+      id:
+        type: integer
+      image_name:
+        type: string
+      is_active:
+        type: boolean
+      priority:
+        type: integer
+    type: object
   http.LoginRequest:
     properties:
       password:
@@ -106,6 +172,77 @@ definitions:
     required:
     - password
     - phone
+    type: object
+  http.OptionResponse:
+    properties:
+      type:
+        type: string
+      type_id:
+        type: integer
+      value:
+        type: string
+      value_id:
+        type: integer
+    type: object
+  http.ProductRequest:
+    properties:
+      category_id:
+        type: integer
+      description:
+        maxLength: 10000
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 200
+        minLength: 2
+        type: string
+      shipment_weight_g:
+        type: integer
+      slug:
+        maxLength: 220
+        minLength: 2
+        type: string
+      thumbnail:
+        maxLength: 255
+        type: string
+    required:
+    - category_id
+    - name
+    - shipment_weight_g
+    - slug
+    - thumbnail
+    type: object
+  http.ProductResponse:
+    properties:
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/http.ImageResponse'
+        type: array
+      is_active:
+        type: boolean
+      name:
+        type: string
+      shipment_weight_g:
+        type: integer
+      slug:
+        type: string
+      thumbnail:
+        type: string
+      updated_at:
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/http.VariantResponse'
+        type: array
     type: object
   http.RefreshRequest:
     properties:
@@ -166,6 +303,103 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  http.VariantRequest:
+    properties:
+      is_active:
+        type: boolean
+      price:
+        type: integer
+      sku:
+        maxLength: 64
+        minLength: 2
+        type: string
+      value_ids:
+        items:
+          type: integer
+        maxItems: 10
+        type: array
+    required:
+    - price
+    - sku
+    type: object
+  http.VariantResponse:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      options:
+        items:
+          $ref: '#/definitions/http.OptionResponse'
+        type: array
+      price:
+        type: integer
+      sku:
+        type: string
+    type: object
+  http.VariantTypeRequest:
+    properties:
+      data_type:
+        enum:
+        - text
+        - color
+        type: string
+      display_order:
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 50
+        minLength: 1
+        type: string
+    required:
+    - data_type
+    - name
+    type: object
+  http.VariantTypeResponse:
+    properties:
+      data_type:
+        type: string
+      display_order:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/http.VariantValueResponse'
+        type: array
+    type: object
+  http.VariantUpdateRequest:
+    properties:
+      is_active:
+        type: boolean
+      price:
+        type: integer
+    required:
+    - price
+    type: object
+  http.VariantValueRequest:
+    properties:
+      display_order:
+        minimum: 0
+        type: integer
+      value:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - value
+    type: object
+  http.VariantValueResponse:
+    properties:
+      display_order:
+        type: integer
+      id:
+        type: integer
+      value:
+        type: string
     type: object
   httpx.ErrorBody:
     properties:
@@ -332,6 +566,363 @@ paths:
       security:
       - BearerAuth: []
       summary: Replace a category (admin)
+      tags:
+      - admin-catalog
+  /admin/products:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Create a product with its variants and images in one transaction (admin)
+      tags:
+      - admin-catalog
+  /admin/products/{id}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Soft-delete a product (admin)
+      tags:
+      - admin-catalog
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.ProductResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Get a product by id, including inactive variants (admin)
+      tags:
+      - admin-catalog
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Replace product fields; variants and images are untouched (admin)
+      tags:
+      - admin-catalog
+  /admin/products/{id}/images:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.ImageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.ImageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Add an image to a product (admin)
+      tags:
+      - admin-catalog
+  /admin/products/{id}/images/{imageId}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image ID
+        in: path
+        name: imageId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Delete a product image (admin)
+      tags:
+      - admin-catalog
+  /admin/products/{id}/variants:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Variant
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.VariantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.VariantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Add a variant to a product (admin)
+      tags:
+      - admin-catalog
+  /admin/products/{id}/variants/{variantId}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Variant ID
+        in: path
+        name: variantId
+        required: true
+        type: integer
+      - description: Variant
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.VariantUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.VariantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Change price / active flag of a variant; SKU is immutable (admin)
+      tags:
+      - admin-catalog
+  /admin/variant-types:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.VariantTypeResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: List variant types with their values (admin)
+      tags:
+      - admin-catalog
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Variant type
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.VariantTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.VariantTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Create a variant type, e.g. Color (admin)
+      tags:
+      - admin-catalog
+  /admin/variant-types/{id}/values:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Variant type ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Variant value
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.VariantValueRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.VariantValueResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Add a value to a variant type, e.g. Red (admin)
       tags:
       - admin-catalog
   /auth/login:
