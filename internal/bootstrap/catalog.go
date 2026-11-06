@@ -13,5 +13,5 @@ import (
 func WireCatalog(api *gin.RouterGroup, pool *pgxpool.Pool, tv middleware.TokenVerifier) {
 	uc := usecase.NewService(catalogpg.NewCategoryRepository(pool), catalogpg.NewProductRepository(pool), catalogpg.NewVariantTypeRepository(pool), postgres.NewTxManager(pool))
 
-	http.RegisterRoutes(api, http.NewCategoryHandler(uc), http.NewVariantTypeHandler(uc), http.NewProductHandler(uc), middleware.Auth(tv), middleware.RequireRole("admin"))
+	http.RegisterRoutes(api, http.NewCategoryHandler(uc), http.NewVariantTypeHandler(uc), http.NewProductHandler(uc), http.NewPublicProductHandler(uc), middleware.Auth(tv), middleware.RequireRole("admin"))
 }

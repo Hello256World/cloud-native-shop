@@ -49,6 +49,29 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (CatalogProduct,
 	return i, err
 }
 
+const getProductBySlug = `-- name: GetProductBySlug :one
+SELECT id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at FROM catalog.products WHERE slug = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetProductBySlug(ctx context.Context, slug string) (CatalogProduct, error) {
+	row := q.db.QueryRow(ctx, getProductBySlug, slug)
+	var i CatalogProduct
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.Thumbnail,
+		&i.ShipmentWeightG,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const insertImage = `-- name: InsertImage :one
 INSERT INTO catalog.product_images (product_id, image_name, priority, is_active)
 VALUES ($1, $2, $3, $4)
@@ -173,6 +196,71 @@ func (q *Queries) InsertVariantOption(ctx context.Context, arg InsertVariantOpti
 	return err
 }
 
+const listAdminProducts = `-- name: ListAdminProducts :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE((
+         SELECT MIN(pv.price) FROM catalog.product_variants pv
+         WHERE pv.product_id = p.id AND pv.is_active
+       ), 0)::bigint AS min_price
+FROM catalog.products p
+WHERE p.deleted_at IS NULL
+  AND ($1::bigint = 0 OR p.id < $1::bigint)
+  AND ($2::bigint = 0 OR p.category_id = $2::bigint)
+  AND ($3::text = '' OR p.name ILIKE '%' || $3::text || '%' ESCAPE '\')
+ORDER BY p.id DESC
+LIMIT $4::int
+`
+
+type ListAdminProductsParams struct {
+	AfterID    int64
+	CategoryID int64
+	Search     string
+	PageSize   int
+}
+
+type ListAdminProductsRow struct {
+	ID         int64
+	CategoryID int64
+	Name       string
+	Slug       string
+	Thumbnail  string
+	IsActive   bool
+	MinPrice   int64
+}
+
+func (q *Queries) ListAdminProducts(ctx context.Context, arg ListAdminProductsParams) ([]ListAdminProductsRow, error) {
+	rows, err := q.db.Query(ctx, listAdminProducts,
+		arg.AfterID,
+		arg.CategoryID,
+		arg.Search,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAdminProductsRow
+	for rows.Next() {
+		var i ListAdminProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Slug,
+			&i.Thumbnail,
+			&i.IsActive,
+			&i.MinPrice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listImagesByProduct = `-- name: ListImagesByProduct :many
 SELECT id, product_id, image_name, priority, is_active, created_at, updated_at FROM catalog.product_images WHERE product_id = $1 ORDER BY priority, id
 `
@@ -194,6 +282,75 @@ func (q *Queries) ListImagesByProduct(ctx context.Context, productID int64) ([]C
 			&i.IsActive,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPublicProducts = `-- name: ListPublicProducts :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE((
+         SELECT MIN(pv.price) FROM catalog.product_variants pv
+         WHERE pv.product_id = p.id AND pv.is_active
+       ), 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND EXISTS (SELECT 1 FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active)
+  AND ($1::bigint = 0 OR p.id < $1::bigint)
+  AND ($2::bigint = 0 OR p.category_id = $2::bigint)
+  AND ($3::text = '' OR p.name ILIKE '%' || $3::text || '%' ESCAPE '\')
+ORDER BY p.id DESC
+LIMIT $4::int
+`
+
+type ListPublicProductsParams struct {
+	AfterID    int64
+	CategoryID int64
+	Search     string
+	PageSize   int
+}
+
+type ListPublicProductsRow struct {
+	ID         int64
+	CategoryID int64
+	Name       string
+	Slug       string
+	Thumbnail  string
+	IsActive   bool
+	MinPrice   int64
+}
+
+func (q *Queries) ListPublicProducts(ctx context.Context, arg ListPublicProductsParams) ([]ListPublicProductsRow, error) {
+	rows, err := q.db.Query(ctx, listPublicProducts,
+		arg.AfterID,
+		arg.CategoryID,
+		arg.Search,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPublicProductsRow
+	for rows.Next() {
+		var i ListPublicProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Slug,
+			&i.Thumbnail,
+			&i.IsActive,
+			&i.MinPrice,
 		); err != nil {
 			return nil, err
 		}

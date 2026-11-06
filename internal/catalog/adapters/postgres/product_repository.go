@@ -57,46 +57,7 @@ func (r *productRepository) GetByID(c context.Context, id int64) (*domain.Produc
 		return nil, fmt.Errorf("catalog.repo.Product.GetByID id=%d: %w", id, err)
 	}
 
-	p := productToDomain(row)
-
-	variantRows, err := q.ListVariantsByProduct(c, id)
-	if err != nil {
-		return nil, fmt.Errorf("catalog.repo.Product.GetByID variants id=%d: %w", id, err)
-	}
-
-	p.Variants = make([]domain.Variant, len(variantRows))
-	idx := make(map[int64]int, len(variantRows))
-	for i, val := range variantRows {
-		p.Variants[i] = variantToDomain(val)
-		idx[val.ID] = i
-	}
-
-	optRows, err := q.ListVariantOptionsByProduct(c, id)
-	if err != nil {
-		return nil, fmt.Errorf("catalog.repo.Product.GetByID options id=%d: %w", id, err)
-	}
-
-	for _, o := range optRows {
-		i := idx[o.ProductVariantID]
-		p.Variants[i].Options = append(p.Variants[i].Options, domain.VariantOption{
-			TypeID:  o.TypeID,
-			Type:    o.TypeName,
-			ValueID: o.ValueID,
-			Value:   o.Value,
-		})
-	}
-
-	imgRows, err := q.ListImagesByProduct(c, id)
-	if err != nil {
-		return nil, fmt.Errorf("catalog.repo.Product.GetByID images id=%d: %w", id, err)
-	}
-
-	p.Images = make([]domain.Image, len(imgRows)) 
-	for i, val := range imgRows {
-		p.Images[i] = imageToDomain(val)
-	}
-
-	return p, nil
+	return r.assemble(c, q, row)
 }
 
 func (r *productRepository) Update(c context.Context, product *domain.Product) (*domain.Product, error) {
@@ -217,4 +178,62 @@ func (r *productRepository) DeleteImage(ctx context.Context, productID, imageID 
 		return domain.ErrImageNotFound
 	}
 	return nil
+}
+
+func (r *productRepository) GetBySlug(c context.Context, slug string) (*domain.Product, error) {
+	q := r.q(c)
+
+	p, err := q.GetProductBySlug(c, slug)
+	if err != nil {
+		if isNoRows(err) {
+			return nil, domain.ErrProductNotFound
+		}
+		return nil, fmt.Errorf("catalog.repo.Product.GetBySlug slug=%s: %w", slug, err)
+	}
+
+	return r.assemble(c, q, p)
+}
+
+func (r *productRepository) assemble(c context.Context, q *db.Queries, row db.CatalogProduct) (*domain.Product, error) {
+	id := row.ID
+	p := productToDomain(row)
+
+	variantRows, err := q.ListVariantsByProduct(c, id)
+	if err != nil {
+		return nil, fmt.Errorf("catalog.repo.Product.GetByID variants id=%d: %w", id, err)
+	}
+
+	p.Variants = make([]domain.Variant, len(variantRows))
+	idx := make(map[int64]int, len(variantRows))
+	for i, val := range variantRows {
+		p.Variants[i] = variantToDomain(val)
+		idx[val.ID] = i
+	}
+
+	optRows, err := q.ListVariantOptionsByProduct(c, id)
+	if err != nil {
+		return nil, fmt.Errorf("catalog.repo.Product.GetByID options id=%d: %w", id, err)
+	}
+
+	for _, o := range optRows {
+		i := idx[o.ProductVariantID]
+		p.Variants[i].Options = append(p.Variants[i].Options, domain.VariantOption{
+			TypeID:  o.TypeID,
+			Type:    o.TypeName,
+			ValueID: o.ValueID,
+			Value:   o.Value,
+		})
+	}
+
+	imgRows, err := q.ListImagesByProduct(c, id)
+	if err != nil {
+		return nil, fmt.Errorf("catalog.repo.Product.GetByID images id=%d: %w", id, err)
+	}
+
+	p.Images = make([]domain.Image, len(imgRows))
+	for i, val := range imgRows {
+		p.Images[i] = imageToDomain(val)
+	}
+
+	return p, nil
 }

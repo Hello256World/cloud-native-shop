@@ -11,10 +11,20 @@ type Product struct {
 	Thumbnail       string
 	ShipmentWeightG int
 	IsActive        bool
-	Variants         []Variant
+	Variants        []Variant
 	Images          []Image
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+}
+
+type ProductSummary struct {
+	ID         int64
+	CategoryID int64
+	Name       string
+	Slug       string
+	Thumbnail  string
+	MinPrice   int64
+	IsActive   bool
 }
 
 type Image struct {

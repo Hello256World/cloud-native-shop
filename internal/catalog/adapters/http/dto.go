@@ -116,3 +116,25 @@ type ProductResponse struct {
 	CreatedAt       time.Time         `json:"created_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 }
+
+type ProductListQuery struct {
+	Cursor     string `json:"cursor" form:"cursor" binding:"omitempty,max=64"`
+	Limit      int    `json:"limit" form:"limit" binding:"omitempty,min=1,max=50"`
+	CategoryID *int64 `json:"category_id" form:"category_id" binding:"omitempty,gt=0"`
+	Q          string `json:"q" form:"q" binding:"omitempty,max=100"`
+}
+
+type ProductSummaryResponse struct {
+	ID         int64  `json:"id"`
+	CategoryID int64  `json:"category_id"`
+	Name       string `json:"name"`
+	Slug       string `json:"slug"`
+	Thumbnail  string `json:"thumbnail"`
+	MinPrice   int64  `json:"min_price"`
+	IsActive   bool   `json:"is_active"`
+}
+
+type ProductPageResponse struct {
+	Items      []ProductSummaryResponse `json:"items"`
+	NextCursor *string                  `json:"next_cursor"` // null = صفحهٔ آخر
+}

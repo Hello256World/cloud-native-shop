@@ -21,4 +21,6 @@ var (
 	ErrVariantTypeNotFound  = errors.New("variant type not found")
 	ErrVariantTypeNameTaken = errors.New("variant type name already exists")
 	ErrVariantValueTaken    = errors.New("variant value already exists")
+
+	ErrInvalidCursor = errors.New("invalid cursor")
 )

@@ -21,7 +21,7 @@ func toCategoryResponse(c *domain.Category) CategoryResponse {
 }
 
 func toCategoryListResponse(list []domain.Category) []CategoryResponse {
-	out := make([]CategoryResponse, len(list)) 
+	out := make([]CategoryResponse, len(list))
 	for i := range list {
 		out[i] = toCategoryResponse(&list[i])
 	}
@@ -90,4 +90,24 @@ func toProductResponse(p *domain.Product) ProductResponse {
 		Thumbnail: p.Thumbnail, ShipmentWeightG: p.ShipmentWeightG, IsActive: p.IsActive,
 		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,
 	}
+}
+
+func toListProductsInput(q ProductListQuery) usecase.ListProductsInput {
+	return usecase.ListProductsInput{Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q}
+}
+
+func toProductPageResponse(p *usecase.ProductPage) ProductPageResponse {
+	items := make([]ProductSummaryResponse, len(p.Items))
+	for i, v := range p.Items {
+		items[i] = ProductSummaryResponse{
+			ID: v.ID, CategoryID: v.CategoryID, Name: v.Name, Slug: v.Slug,
+			Thumbnail: v.Thumbnail, MinPrice: v.MinPrice, IsActive: v.IsActive,
+		}
+	}
+	out := ProductPageResponse{Items: items}
+	if p.NextCursor != "" {
+		next := p.NextCursor
+		out.NextCursor = &next
+	}
+	return out
 }

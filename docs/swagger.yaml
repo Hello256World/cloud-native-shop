@@ -105,7 +105,6 @@ definitions:
         maxLength: 10000
         type: string
       images:
-        description: 'TODO: write div attr in the note'
         items:
           $ref: '#/definitions/http.ImageRequest'
         maxItems: 20
@@ -184,6 +183,16 @@ definitions:
       value_id:
         type: integer
     type: object
+  http.ProductPageResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/http.ProductSummaryResponse'
+        type: array
+      next_cursor:
+        description: null = صفحهٔ آخر
+        type: string
+    type: object
   http.ProductRequest:
     properties:
       category_id:
@@ -243,6 +252,23 @@ definitions:
         items:
           $ref: '#/definitions/http.VariantResponse'
         type: array
+    type: object
+  http.ProductSummaryResponse:
+    properties:
+      category_id:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      min_price:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      thumbnail:
+        type: string
     type: object
   http.RefreshRequest:
     properties:
@@ -569,6 +595,48 @@ paths:
       tags:
       - admin-catalog
   /admin/products:
+    get:
+      parameters:
+      - description: Opaque cursor from the previous page
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (1-50, default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category id
+        in: query
+        name: category_id
+        type: integer
+      - description: Search in product name
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.ProductPageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: List all products incl. inactive (admin, cursor pagination)
+      tags:
+      - admin-catalog
     post:
       consumes:
       - application/json
@@ -1190,6 +1258,63 @@ paths:
       summary: Replace an address
       tags:
       - me
+  /products:
+    get:
+      description: Newest first. Pass the returned next_cursor as `cursor` to get
+        the next page; null means last page.
+      parameters:
+      - description: Opaque cursor from the previous page
+        in: query
+        name: cursor
+        type: string
+      - description: Page size (1-50, default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category id (exact, no descendants)
+        in: query
+        name: category_id
+        type: integer
+      - description: Search in product name
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.ProductPageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      summary: List active products (cursor pagination)
+      tags:
+      - catalog
+  /products/{slug}:
+    get:
+      parameters:
+      - description: Product slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.ProductResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      summary: Get an active product by slug (only active variants and images)
+      tags:
+      - catalog
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer <access_token>"

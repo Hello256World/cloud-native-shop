@@ -39,6 +39,8 @@ func toAPIError(err error) error {
 		api = apierrors.NewConflictError("variant_type_name_taken", "variant type name already exists")
 	case errors.Is(err, domain.ErrVariantValueTaken):
 		api = apierrors.NewConflictError("variant_value_taken", "variant value already exists")
+	case errors.Is(err, domain.ErrInvalidCursor):
+		api = apierrors.NewBadRequestError("invalid_cursor", "invalid cursor")
 	default:
 		return err
 	}

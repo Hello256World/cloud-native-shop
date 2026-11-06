@@ -19,6 +19,7 @@ type productSerivce interface {
 	UpdateVariant(ctx context.Context, productID, variantID, price int64, active bool) (*domain.Variant, error)
 	AddImage(ctx context.Context, productID int64, in usecase.ImageInput) (*domain.Image, error)
 	DeleteImage(ctx context.Context, productID, imageID int64) error
+	ListAdminProducts(context.Context, usecase.ListProductsInput) (*usecase.ProductPage, error)
 }
 
 type ProductHandler struct {
@@ -264,4 +265,33 @@ func (h *ProductHandler) DeleteImage(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// List godoc
+// @Summary     List all products incl. inactive (admin, cursor pagination)
+// @Tags        admin-catalog
+// @Produce     json
+// @Security    BearerAuth
+// @Param       cursor      query string false "Opaque cursor from the previous page"
+// @Param       limit       query int    false "Page size (1-50, default 20)"
+// @Param       category_id query int    false "Filter by category id"
+// @Param       q           query string false "Search in product name"
+// @Success     200 {object} ProductPageResponse
+// @Failure     400 {object} httpx.ErrorBody
+// @Failure     401 {object} httpx.ErrorBody
+// @Failure     403 {object} httpx.ErrorBody
+// @Router      /admin/products [get]
+func (h *ProductHandler) List(c *gin.Context) {
+	var q ProductListQuery
+	if !httpx.Bind(c, &q) {
+		return
+	}
+
+	items, err := h.svc.ListAdminProducts(c.Request.Context(), toListProductsInput(q))
+	if err != nil {
+		httpx.Respond(c, toAPIError(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, toProductPageResponse(items))
 }

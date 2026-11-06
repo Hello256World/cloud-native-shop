@@ -57,3 +57,38 @@ DELETE FROM catalog.product_images WHERE id = $1 AND product_id = $2;
 
 -- name: ListImagesByProduct :many
 SELECT * FROM catalog.product_images WHERE product_id = $1 ORDER BY priority, id;
+
+-- name: GetProductBySlug :one
+SELECT * FROM catalog.products WHERE slug = $1 AND deleted_at IS NULL;
+
+-- name: ListPublicProducts :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE((
+         SELECT MIN(pv.price) FROM catalog.product_variants pv
+         WHERE pv.product_id = p.id AND pv.is_active
+       ), 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND EXISTS (SELECT 1 FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active)
+  AND (sqlc.arg(after_id)::bigint = 0 OR p.id < sqlc.arg(after_id)::bigint)
+  AND (sqlc.arg(category_id)::bigint = 0 OR p.category_id = sqlc.arg(category_id)::bigint)
+  AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
+ORDER BY p.id DESC
+LIMIT sqlc.arg(page_size)::int;
+
+-- name: ListAdminProducts :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE((
+         SELECT MIN(pv.price) FROM catalog.product_variants pv
+         WHERE pv.product_id = p.id AND pv.is_active
+       ), 0)::bigint AS min_price
+FROM catalog.products p
+WHERE p.deleted_at IS NULL
+  AND (sqlc.arg(after_id)::bigint = 0 OR p.id < sqlc.arg(after_id)::bigint)
+  AND (sqlc.arg(category_id)::bigint = 0 OR p.category_id = sqlc.arg(category_id)::bigint)
+  AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
+ORDER BY p.id DESC
+LIMIT sqlc.arg(page_size)::int;
