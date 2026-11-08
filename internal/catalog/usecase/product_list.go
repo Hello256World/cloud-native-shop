@@ -18,6 +18,9 @@ type ListProductsInput struct {
 	Limit      int
 	CategoryID *int64
 	Search     string
+	Sort       domain.ProductSort
+	PriceMin   int64
+	PriceMax   int64
 }
 
 type ProductPage struct {
@@ -32,11 +35,21 @@ func (s *Service) ListPublicProducts(c context.Context, in ListProductsInput) (*
 }
 
 func (s *Service) ListAdminProducts(c context.Context, in ListProductsInput) (*ProductPage, error) {
+	in.Sort = domain.SortNewest
+	in.PriceMin, in.PriceMax = 0, 0
 	return s.listProducts(c, in, s.products.ListAdmin)
 }
 
 func (s *Service) listProducts(c context.Context, in ListProductsInput, fetch listFunc) (*ProductPage, error) {
-	after, err := decodeCursor(in.Cursor)
+	sort := in.Sort
+	if sort == "" {
+		sort = domain.SortNewest
+	}
+	if !sort.Valid() {
+		return nil, domain.ErrInvalidSort
+	}
+
+	afterPrice, afterID, err := decodeCursor(in.Cursor, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +63,13 @@ func (s *Service) listProducts(c context.Context, in ListProductsInput, fetch li
 	}
 
 	f := ports.ProductListFilter{
-		AfterID: after,
-		Search:  strings.TrimSpace(in.Search),
-		Limit:   limit + 1,
+		Sort:       sort,
+		AfterID:    afterID,
+		AfterPrice: afterPrice,
+		Search:     strings.TrimSpace(in.Search),
+		PriceMin:   in.PriceMin,
+		PriceMax:   in.PriceMax,
+		Limit:      limit + 1,
 	}
 	if in.CategoryID != nil {
 		f.CategoryID = *in.CategoryID
@@ -66,9 +83,13 @@ func (s *Service) listProducts(c context.Context, in ListProductsInput, fetch li
 	page := &ProductPage{Items: items}
 	if len(items) > limit {
 		page.Items = items[:limit]
-		page.NextCursor = encodeCursor(items[limit-1].ID)
+		last := items[limit-1]
+		var price int64
+		if sort != domain.SortNewest {
+			price = last.MinPrice
+		}
+		page.NextCursor = encodeCursor(sort, price, last.ID)
 	}
-
 	return page, nil
 }
 

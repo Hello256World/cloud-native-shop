@@ -20,18 +20,6 @@ type CatalogCategory struct {
 	DeletedAt *time.Time
 }
 
-type CatalogCompareProduct struct {
-	ID        int64
-	ProductID int64
-	Name      string
-	Link      string
-	Price     int64
-	Image     *string
-	IsActive  bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
 type CatalogProduct struct {
 	ID              int64
 	CategoryID      int64
@@ -44,6 +32,7 @@ type CatalogProduct struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       *time.Time
+	MinPrice        *int64
 }
 
 type CatalogProductImage struct {

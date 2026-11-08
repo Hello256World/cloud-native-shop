@@ -63,20 +63,55 @@ SELECT * FROM catalog.products WHERE slug = $1 AND deleted_at IS NULL;
 
 -- name: ListPublicProducts :many
 SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
-       COALESCE((
-         SELECT MIN(pv.price) FROM catalog.product_variants pv
-         WHERE pv.product_id = p.id AND pv.is_active
-       ), 0)::bigint AS min_price
+       COALESCE(p.min_price, 0)::bigint AS min_price
 FROM catalog.products p
 JOIN catalog.categories c
   ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
 WHERE p.deleted_at IS NULL
   AND p.is_active
-  AND EXISTS (SELECT 1 FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active)
+  AND p.min_price IS NOT NULL
   AND (sqlc.arg(after_id)::bigint = 0 OR p.id < sqlc.arg(after_id)::bigint)
   AND (sqlc.arg(category_id)::bigint = 0 OR p.category_id = sqlc.arg(category_id)::bigint)
   AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
+  AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
+  AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
 ORDER BY p.id DESC
+LIMIT sqlc.arg(page_size)::int;
+
+-- name: ListPublicProductsByPriceAsc :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE(p.min_price, 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND p.min_price IS NOT NULL
+  AND (sqlc.arg(after_id)::bigint = 0
+       OR (p.min_price, p.id) > (sqlc.arg(after_price)::bigint, sqlc.arg(after_id)::bigint))
+  AND (sqlc.arg(category_id)::bigint = 0 OR p.category_id = sqlc.arg(category_id)::bigint)
+  AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
+  AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
+  AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
+ORDER BY p.min_price ASC, p.id ASC
+LIMIT sqlc.arg(page_size)::int;
+
+-- name: ListPublicProductsByPriceDesc :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE(p.min_price, 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND p.min_price IS NOT NULL
+  AND (sqlc.arg(after_id)::bigint = 0
+       OR (p.min_price, p.id) < (sqlc.arg(after_price)::bigint, sqlc.arg(after_id)::bigint))
+  AND (sqlc.arg(category_id)::bigint = 0 OR p.category_id = sqlc.arg(category_id)::bigint)
+  AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
+  AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
+  AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
+ORDER BY p.min_price DESC, p.id DESC
 LIMIT sqlc.arg(page_size)::int;
 
 -- name: ListAdminProducts :many
@@ -92,3 +127,11 @@ WHERE p.deleted_at IS NULL
   AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
 ORDER BY p.id DESC
 LIMIT sqlc.arg(page_size)::int;
+
+-- name: RecalcProductMinPrice :exec
+UPDATE catalog.products p
+SET min_price = (
+  SELECT MIN(pv.price) FROM catalog.product_variants pv
+  WHERE pv.product_id = p.id AND pv.is_active
+)
+WHERE p.id = $1;

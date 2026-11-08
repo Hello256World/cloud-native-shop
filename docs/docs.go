@@ -1330,6 +1330,29 @@ const docTemplate = `{
                         "description": "Search in product name",
                         "name": "q",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "newest",
+                            "price_asc",
+                            "price_desc"
+                        ],
+                        "type": "string",
+                        "description": "newest (default) | price_asc | price_desc",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum price (minor units, on the lowest variant price)",
+                        "name": "price_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum price",
+                        "name": "price_max",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1364,6 +1387,29 @@ const docTemplate = `{
                         "name": "slug",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "enum": [
+                            "newest",
+                            "price_asc",
+                            "price_desc"
+                        ],
+                        "type": "string",
+                        "description": "newest (default) | price_asc | price_desc",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum price (minor units, on the lowest variant price)",
+                        "name": "price_min",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum price",
+                        "name": "price_max",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1657,7 +1703,6 @@ const docTemplate = `{
                     }
                 },
                 "next_cursor": {
-                    "description": "null = صفحهٔ آخر",
                     "type": "string"
                 }
             }

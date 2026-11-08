@@ -190,7 +190,6 @@ definitions:
           $ref: '#/definitions/http.ProductSummaryResponse'
         type: array
       next_cursor:
-        description: null = صفحهٔ آخر
         type: string
     type: object
   http.ProductRequest:
@@ -1279,6 +1278,22 @@ paths:
         in: query
         name: q
         type: string
+      - description: newest (default) | price_asc | price_desc
+        enum:
+        - newest
+        - price_asc
+        - price_desc
+        in: query
+        name: sort
+        type: string
+      - description: Minimum price (minor units, on the lowest variant price)
+        in: query
+        name: price_min
+        type: integer
+      - description: Maximum price
+        in: query
+        name: price_max
+        type: integer
       produces:
       - application/json
       responses:
@@ -1301,6 +1316,22 @@ paths:
         name: slug
         required: true
         type: string
+      - description: newest (default) | price_asc | price_desc
+        enum:
+        - newest
+        - price_asc
+        - price_desc
+        in: query
+        name: sort
+        type: string
+      - description: Minimum price (minor units, on the lowest variant price)
+        in: query
+        name: price_min
+        type: integer
+      - description: Maximum price
+        in: query
+        name: price_max
+        type: integer
       produces:
       - application/json
       responses:

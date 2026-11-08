@@ -2,6 +2,18 @@ package domain
 
 import "time"
 
+type ProductSort string
+
+const (
+	SortNewest    ProductSort = "newest"
+	SortPriceAsc  ProductSort = "price_asc"
+	SortPriceDesc ProductSort = "price_desc"
+)
+
+func (s ProductSort) Valid() bool {
+	return s == SortNewest || s == SortPriceAsc || s == SortPriceDesc
+}
+
 type Product struct {
 	ID              int64
 	CategoryID      int64

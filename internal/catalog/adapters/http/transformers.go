@@ -93,9 +93,11 @@ func toProductResponse(p *domain.Product) ProductResponse {
 }
 
 func toListProductsInput(q ProductListQuery) usecase.ListProductsInput {
-	return usecase.ListProductsInput{Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q}
+	return usecase.ListProductsInput{
+		Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q,
+		Sort: domain.ProductSort(q.Sort), PriceMin: q.PriceMin, PriceMax: q.PriceMax,
+	}
 }
-
 func toProductPageResponse(p *usecase.ProductPage) ProductPageResponse {
 	items := make([]ProductSummaryResponse, len(p.Items))
 	for i, v := range p.Items {
@@ -110,4 +112,8 @@ func toProductPageResponse(p *usecase.ProductPage) ProductPageResponse {
 		out.NextCursor = &next
 	}
 	return out
+}
+
+func toAdminListProductsInput(q AdminProductListQuery) usecase.ListProductsInput {
+	return usecase.ListProductsInput{Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q}
 }

@@ -27,7 +27,7 @@ func (q *Queries) DeleteImage(ctx context.Context, arg DeleteImageParams) (int64
 }
 
 const getProductByID = `-- name: GetProductByID :one
-SELECT id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at FROM catalog.products WHERE id = $1 AND deleted_at IS NULL
+SELECT id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at, min_price FROM catalog.products WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetProductByID(ctx context.Context, id int64) (CatalogProduct, error) {
@@ -45,12 +45,13 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (CatalogProduct,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.MinPrice,
 	)
 	return i, err
 }
 
 const getProductBySlug = `-- name: GetProductBySlug :one
-SELECT id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at FROM catalog.products WHERE slug = $1 AND deleted_at IS NULL
+SELECT id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at, min_price FROM catalog.products WHERE slug = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetProductBySlug(ctx context.Context, slug string) (CatalogProduct, error) {
@@ -68,6 +69,7 @@ func (q *Queries) GetProductBySlug(ctx context.Context, slug string) (CatalogPro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.MinPrice,
 	)
 	return i, err
 }
@@ -108,7 +110,7 @@ func (q *Queries) InsertImage(ctx context.Context, arg InsertImageParams) (Catal
 const insertProduct = `-- name: InsertProduct :one
 INSERT INTO catalog.products (category_id, name, slug, description, thumbnail, shipment_weight_g, is_active)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at
+RETURNING id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at, min_price
 `
 
 type InsertProductParams struct {
@@ -144,6 +146,7 @@ func (q *Queries) InsertProduct(ctx context.Context, arg InsertProductParams) (C
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.MinPrice,
 	)
 	return i, err
 }
@@ -295,27 +298,28 @@ func (q *Queries) ListImagesByProduct(ctx context.Context, productID int64) ([]C
 
 const listPublicProducts = `-- name: ListPublicProducts :many
 SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
-       COALESCE((
-         SELECT MIN(pv.price) FROM catalog.product_variants pv
-         WHERE pv.product_id = p.id AND pv.is_active
-       ), 0)::bigint AS min_price
+       COALESCE(p.min_price, 0)::bigint AS min_price
 FROM catalog.products p
 JOIN catalog.categories c
   ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
 WHERE p.deleted_at IS NULL
   AND p.is_active
-  AND EXISTS (SELECT 1 FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active)
+  AND p.min_price IS NOT NULL
   AND ($1::bigint = 0 OR p.id < $1::bigint)
   AND ($2::bigint = 0 OR p.category_id = $2::bigint)
   AND ($3::text = '' OR p.name ILIKE '%' || $3::text || '%' ESCAPE '\')
+  AND ($4::bigint = 0 OR p.min_price >= $4::bigint)
+  AND ($5::bigint = 0 OR p.min_price <= $5::bigint)
 ORDER BY p.id DESC
-LIMIT $4::int
+LIMIT $6::int
 `
 
 type ListPublicProductsParams struct {
 	AfterID    int64
 	CategoryID int64
 	Search     string
+	PriceMin   int64
+	PriceMax   int64
 	PageSize   int
 }
 
@@ -334,6 +338,8 @@ func (q *Queries) ListPublicProducts(ctx context.Context, arg ListPublicProducts
 		arg.AfterID,
 		arg.CategoryID,
 		arg.Search,
+		arg.PriceMin,
+		arg.PriceMax,
 		arg.PageSize,
 	)
 	if err != nil {
@@ -343,6 +349,156 @@ func (q *Queries) ListPublicProducts(ctx context.Context, arg ListPublicProducts
 	var items []ListPublicProductsRow
 	for rows.Next() {
 		var i ListPublicProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Slug,
+			&i.Thumbnail,
+			&i.IsActive,
+			&i.MinPrice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPublicProductsByPriceAsc = `-- name: ListPublicProductsByPriceAsc :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE(p.min_price, 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND p.min_price IS NOT NULL
+  AND ($1::bigint = 0
+       OR (p.min_price, p.id) > ($2::bigint, $1::bigint))
+  AND ($3::bigint = 0 OR p.category_id = $3::bigint)
+  AND ($4::text = '' OR p.name ILIKE '%' || $4::text || '%' ESCAPE '\')
+  AND ($5::bigint = 0 OR p.min_price >= $5::bigint)
+  AND ($6::bigint = 0 OR p.min_price <= $6::bigint)
+ORDER BY p.min_price ASC, p.id ASC
+LIMIT $7::int
+`
+
+type ListPublicProductsByPriceAscParams struct {
+	AfterID    int64
+	AfterPrice int64
+	CategoryID int64
+	Search     string
+	PriceMin   int64
+	PriceMax   int64
+	PageSize   int
+}
+
+type ListPublicProductsByPriceAscRow struct {
+	ID         int64
+	CategoryID int64
+	Name       string
+	Slug       string
+	Thumbnail  string
+	IsActive   bool
+	MinPrice   int64
+}
+
+func (q *Queries) ListPublicProductsByPriceAsc(ctx context.Context, arg ListPublicProductsByPriceAscParams) ([]ListPublicProductsByPriceAscRow, error) {
+	rows, err := q.db.Query(ctx, listPublicProductsByPriceAsc,
+		arg.AfterID,
+		arg.AfterPrice,
+		arg.CategoryID,
+		arg.Search,
+		arg.PriceMin,
+		arg.PriceMax,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPublicProductsByPriceAscRow
+	for rows.Next() {
+		var i ListPublicProductsByPriceAscRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Slug,
+			&i.Thumbnail,
+			&i.IsActive,
+			&i.MinPrice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPublicProductsByPriceDesc = `-- name: ListPublicProductsByPriceDesc :many
+SELECT p.id, p.category_id, p.name, p.slug, p.thumbnail, p.is_active,
+       COALESCE(p.min_price, 0)::bigint AS min_price
+FROM catalog.products p
+JOIN catalog.categories c
+  ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND p.min_price IS NOT NULL
+  AND ($1::bigint = 0
+       OR (p.min_price, p.id) < ($2::bigint, $1::bigint))
+  AND ($3::bigint = 0 OR p.category_id = $3::bigint)
+  AND ($4::text = '' OR p.name ILIKE '%' || $4::text || '%' ESCAPE '\')
+  AND ($5::bigint = 0 OR p.min_price >= $5::bigint)
+  AND ($6::bigint = 0 OR p.min_price <= $6::bigint)
+ORDER BY p.min_price DESC, p.id DESC
+LIMIT $7::int
+`
+
+type ListPublicProductsByPriceDescParams struct {
+	AfterID    int64
+	AfterPrice int64
+	CategoryID int64
+	Search     string
+	PriceMin   int64
+	PriceMax   int64
+	PageSize   int
+}
+
+type ListPublicProductsByPriceDescRow struct {
+	ID         int64
+	CategoryID int64
+	Name       string
+	Slug       string
+	Thumbnail  string
+	IsActive   bool
+	MinPrice   int64
+}
+
+func (q *Queries) ListPublicProductsByPriceDesc(ctx context.Context, arg ListPublicProductsByPriceDescParams) ([]ListPublicProductsByPriceDescRow, error) {
+	rows, err := q.db.Query(ctx, listPublicProductsByPriceDesc,
+		arg.AfterID,
+		arg.AfterPrice,
+		arg.CategoryID,
+		arg.Search,
+		arg.PriceMin,
+		arg.PriceMax,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPublicProductsByPriceDescRow
+	for rows.Next() {
+		var i ListPublicProductsByPriceDescRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CategoryID,
@@ -442,6 +598,20 @@ func (q *Queries) ListVariantsByProduct(ctx context.Context, productID int64) ([
 	return items, nil
 }
 
+const recalcProductMinPrice = `-- name: RecalcProductMinPrice :exec
+UPDATE catalog.products p
+SET min_price = (
+  SELECT MIN(pv.price) FROM catalog.product_variants pv
+  WHERE pv.product_id = p.id AND pv.is_active
+)
+WHERE p.id = $1
+`
+
+func (q *Queries) RecalcProductMinPrice(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, recalcProductMinPrice, id)
+	return err
+}
+
 const softDeleteProduct = `-- name: SoftDeleteProduct :execrows
 UPDATE catalog.products SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
@@ -460,7 +630,7 @@ UPDATE catalog.products
 SET category_id = $2, name = $3, slug = $4, description = $5,
     thumbnail = $6, shipment_weight_g = $7, is_active = $8
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at
+RETURNING id, category_id, name, slug, description, thumbnail, shipment_weight_g, is_active, created_at, updated_at, deleted_at, min_price
 `
 
 type UpdateProductParams struct {
@@ -498,6 +668,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (C
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.MinPrice,
 	)
 	return i, err
 }

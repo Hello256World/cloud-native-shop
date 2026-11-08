@@ -194,6 +194,13 @@ func (r *productRepository) GetBySlug(c context.Context, slug string) (*domain.P
 	return r.assemble(c, q, p)
 }
 
+func (r *productRepository) RecalcMinPrice(ctx context.Context, productID int64) error {
+	if err := r.q(ctx).RecalcProductMinPrice(ctx, productID); err != nil {
+		return fmt.Errorf("catalog.repo.Product.RecalcMinPrice id=%d: %w", productID, err)
+	}
+	return nil
+}
+
 func (r *productRepository) assemble(c context.Context, q *db.Queries, row db.CatalogProduct) (*domain.Product, error) {
 	id := row.ID
 	p := productToDomain(row)

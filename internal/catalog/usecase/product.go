@@ -91,6 +91,10 @@ func (s *Service) CreateProduct(c context.Context, in CreateProductInput) (*doma
 			}
 		}
 
+		if err := s.products.RecalcMinPrice(ctx, p.ID); err != nil {
+			return err
+		}
+
 		for _, val := range in.Images {
 			if _, err := s.products.AddImage(ctx, p.ID, val.toDomain()); err != nil {
 				return err
@@ -139,16 +143,37 @@ func (s *Service) AddVariant(c context.Context, productID int64, in VariantInput
 		return nil, err
 	}
 
-	return s.products.AddVariant(c, productID, in.toDomain(opts))
+	var out *domain.Variant
+	err = s.tx.WithinTx(c, func(ctx context.Context) error {
+		v, err := s.products.AddVariant(ctx, productID, in.toDomain(opts))
+		if err != nil {
+			return err
+		}
+		out = v
+		return s.products.RecalcMinPrice(ctx, productID)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func (s *Service) UpdateVariant(c context.Context, productID, variantID, price int64, actice bool) (*domain.Variant, error) {
-	return s.products.UpdateVariant(c, &domain.Variant{
-		ProductID: productID,
-		ID:        variantID,
-		Price:     price,
-		IsActive:  actice,
+func (s *Service) UpdateVariant(c context.Context, productID, variantID, price int64, active bool) (*domain.Variant, error) {
+	var out *domain.Variant
+	err := s.tx.WithinTx(c, func(ctx context.Context) error {
+		v, err := s.products.UpdateVariant(ctx, &domain.Variant{
+			ProductID: productID, ID: variantID, Price: price, IsActive: active,
+		})
+		if err != nil {
+			return err
+		}
+		out = v
+		return s.products.RecalcMinPrice(ctx, productID)
 	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (s *Service) AddImage(c context.Context, productID int64, in ImageInput) (*domain.Image, error) {

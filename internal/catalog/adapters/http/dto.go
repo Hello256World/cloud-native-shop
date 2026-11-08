@@ -118,10 +118,13 @@ type ProductResponse struct {
 }
 
 type ProductListQuery struct {
-	Cursor     string `json:"cursor" form:"cursor" binding:"omitempty,max=64"`
+	Cursor     string `json:"cursor" form:"cursor" binding:"omitempty,max=128"`
 	Limit      int    `json:"limit" form:"limit" binding:"omitempty,min=1,max=50"`
 	CategoryID *int64 `json:"category_id" form:"category_id" binding:"omitempty,gt=0"`
 	Q          string `json:"q" form:"q" binding:"omitempty,max=100"`
+	Sort       string `json:"sort" form:"sort" binding:"omitempty,oneof=newest price_asc price_desc"`
+	PriceMin   int64  `json:"price_min" form:"price_min" binding:"omitempty,gt=0"`
+	PriceMax   int64  `json:"price_max" form:"price_max" binding:"omitempty,gt=0,gtefield=PriceMin"`
 }
 
 type ProductSummaryResponse struct {
@@ -136,5 +139,12 @@ type ProductSummaryResponse struct {
 
 type ProductPageResponse struct {
 	Items      []ProductSummaryResponse `json:"items"`
-	NextCursor *string                  `json:"next_cursor"` // null = صفحهٔ آخر
+	NextCursor *string                  `json:"next_cursor"`
+}
+
+type AdminProductListQuery struct {
+	Cursor     string `json:"cursor" form:"cursor" binding:"omitempty,max=128"`
+	Limit      int    `json:"limit" form:"limit" binding:"omitempty,min=1,max=50"`
+	CategoryID *int64 `json:"category_id" form:"category_id" binding:"omitempty,gt=0"`
+	Q          string `json:"q" form:"q" binding:"omitempty,max=100"`
 }

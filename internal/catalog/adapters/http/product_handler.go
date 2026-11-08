@@ -282,12 +282,12 @@ func (h *ProductHandler) DeleteImage(c *gin.Context) {
 // @Failure     403 {object} httpx.ErrorBody
 // @Router      /admin/products [get]
 func (h *ProductHandler) List(c *gin.Context) {
-	var q ProductListQuery
+	var q AdminProductListQuery
 	if !httpx.Bind(c, &q) {
 		return
 	}
 
-	items, err := h.svc.ListAdminProducts(c.Request.Context(), toListProductsInput(q))
+	items, err := h.svc.ListAdminProducts(c.Request.Context(), toAdminListProductsInput(q))
 	if err != nil {
 		httpx.Respond(c, toAPIError(err))
 		return

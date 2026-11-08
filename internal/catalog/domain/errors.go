@@ -23,4 +23,6 @@ var (
 	ErrVariantValueTaken    = errors.New("variant value already exists")
 
 	ErrInvalidCursor = errors.New("invalid cursor")
+
+	ErrInvalidSort = errors.New("invalid sort")
 )

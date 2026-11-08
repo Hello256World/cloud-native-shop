@@ -7,9 +7,13 @@ import (
 )
 
 type ProductListFilter struct {
-	AfterID    int64
+	Sort       domain.ProductSort
+	AfterID    int64 
+	AfterPrice int64 
 	CategoryID int64
 	Search     string
+	PriceMin   int64 
+	PriceMax   int64
 	Limit      int
 }
 
@@ -28,4 +32,5 @@ type ProductRepository interface {
 	GetBySlug(context.Context, string) (*domain.Product, error)
 	ListPublic(context.Context, ProductListFilter) ([]domain.ProductSummary, error)
 	ListAdmin(context.Context, ProductListFilter) ([]domain.ProductSummary, error)
+	RecalcMinPrice(ctx context.Context, productID int64) error
 }
