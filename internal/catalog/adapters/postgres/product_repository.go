@@ -86,6 +86,7 @@ func (r *productRepository) Update(c context.Context, product *domain.Product) (
 
 	return productToDomain(row), nil
 }
+
 func (r *productRepository) Delete(c context.Context, id int64) error {
 	n, err := r.q(c).SoftDeleteProduct(c, id)
 	if err != nil {

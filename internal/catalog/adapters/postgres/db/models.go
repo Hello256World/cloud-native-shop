@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+type CatalogAttributeDefinition struct {
+	ID           int64
+	Code         string
+	Name         string
+	ValueType    string
+	Unit         *string
+	IsFilterable bool
+	DisplayOrder int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 type CatalogCategory struct {
 	ID        int64
 	ParentID  *int64
@@ -33,6 +45,13 @@ type CatalogProduct struct {
 	UpdatedAt       time.Time
 	DeletedAt       *time.Time
 	MinPrice        *int64
+}
+
+type CatalogProductAttribute struct {
+	ProductID   int64
+	AttributeID int64
+	ValueText   *string
+	ValueNumber *float64
 }
 
 type CatalogProductImage struct {
