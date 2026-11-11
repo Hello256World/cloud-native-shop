@@ -1455,22 +1455,6 @@ paths:
         name: slug
         required: true
         type: string
-      - description: newest (default) | price_asc | price_desc
-        enum:
-        - newest
-        - price_asc
-        - price_desc
-        in: query
-        name: sort
-        type: string
-      - description: Minimum price (minor units, on the lowest variant price)
-        in: query
-        name: price_min
-        type: integer
-      - description: Maximum price
-        in: query
-        name: price_max
-        type: integer
       produces:
       - application/json
       responses:

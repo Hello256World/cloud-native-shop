@@ -61,9 +61,6 @@ func (h *PublicProductHandler) List(c *gin.Context) {
 // @Tags        catalog
 // @Produce     json
 // @Param       slug path string true "Product slug"
-// @Param       sort        query string false "newest (default) | price_asc | price_desc" Enums(newest, price_asc, price_desc)
-// @Param       price_min   query int    false "Minimum price (minor units, on the lowest variant price)"
-// @Param       price_max   query int    false "Maximum price"
 // @Success     200 {object} ProductResponse
 // @Failure     404 {object} httpx.ErrorBody
 // @Router      /products/{slug} [get]
