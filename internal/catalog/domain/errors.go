@@ -25,4 +25,7 @@ var (
 	ErrInvalidCursor = errors.New("invalid cursor")
 
 	ErrInvalidSort = errors.New("invalid sort")
+
+	ErrAttributeCodeTaken = errors.New("attribute code already exists")
+	ErrInvalidAttributes  = errors.New("invalid product attributes")
 )

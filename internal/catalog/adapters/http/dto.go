@@ -47,13 +47,14 @@ type VariantTypeResponse struct {
 }
 
 type ProductRequest struct {
-	CategoryID      int64   `json:"category_id" binding:"required,gt=0"`
-	Name            string  `json:"name" binding:"required,min=2,max=200"`
-	Slug            string  `json:"slug" binding:"required,min=2,max=220,slug"`
-	Description     *string `json:"description" binding:"omitempty,max=10000"`
-	Thumbnail       string  `json:"thumbnail" binding:"required,max=255"`
-	ShipmentWeightG int     `json:"shipment_weight_g" binding:"required,gt=0"`
-	IsActive        bool    `json:"is_active"`
+	CategoryID      int64                     `json:"category_id" binding:"required,gt=0"`
+	Name            string                    `json:"name" binding:"required,min=2,max=200"`
+	Slug            string                    `json:"slug" binding:"required,min=2,max=220,slug"`
+	Description     *string                   `json:"description" binding:"omitempty,max=10000"`
+	Attributes      []ProductAttributeRequest `json:"attributes" binding:"omitempty,max=50,dive"`
+	Thumbnail       string                    `json:"thumbnail" binding:"required,max=255"`
+	ShipmentWeightG int                       `json:"shipment_weight_g" binding:"required,gt=0"`
+	IsActive        bool                      `json:"is_active"`
 }
 
 type VariantRequest struct {
@@ -111,6 +112,7 @@ type ProductResponse struct {
 	Thumbnail       string            `json:"thumbnail"`
 	ShipmentWeightG int               `json:"shipment_weight_g"`
 	IsActive        bool              `json:"is_active"`
+	Specs           []SpecResponse    `json:"specs"`
 	Variants        []VariantResponse `json:"variants"`
 	Images          []ImageResponse   `json:"images"`
 	CreatedAt       time.Time         `json:"created_at"`
@@ -147,4 +149,37 @@ type AdminProductListQuery struct {
 	Limit      int    `json:"limit" form:"limit" binding:"omitempty,min=1,max=50"`
 	CategoryID *int64 `json:"category_id" form:"category_id" binding:"omitempty,gt=0"`
 	Q          string `json:"q" form:"q" binding:"omitempty,max=100"`
+}
+
+type ProductAttributeRequest struct {
+	AttributeID int64  `json:"attribute_id" binding:"required,gt=0"`
+	Value       string `json:"value" binding:"required,max=200"`
+}
+
+type AttributeDefinitionRequest struct {
+	Code         string  `json:"code" binding:"required,min=2,max=50,slug"`
+	Name         string  `json:"name" binding:"required,min=1,max=100"`
+	ValueType    string  `json:"value_type" binding:"required,oneof=text number"`
+	Unit         *string `json:"unit" binding:"omitempty,max=20"`
+	IsFilterable bool    `json:"is_filterable"`
+	DisplayOrder int     `json:"display_order" binding:"min=0"`
+}
+
+type AttributeDefinitionResponse struct {
+	ID           int64   `json:"id"`
+	Code         string  `json:"code"`
+	Name         string  `json:"name"`
+	ValueType    string  `json:"value_type"`
+	Unit         *string `json:"unit,omitempty"`
+	IsFilterable bool    `json:"is_filterable"`
+	DisplayOrder int     `json:"display_order"`
+}
+
+type SpecResponse struct {
+	AttributeID int64   `json:"attribute_id"`
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	ValueType   string  `json:"value_type"`
+	Value       string  `json:"value"`
+	Unit        *string `json:"unit,omitempty"`
 }

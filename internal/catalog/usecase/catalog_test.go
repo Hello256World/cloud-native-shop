@@ -82,7 +82,7 @@ func (fakeTx) WithinTx(ctx context.Context, fn func(context.Context) error) erro
 
 func newSvc() (*Service, *fakeCategories) {
 	repo := newFakeCategories()
-	return NewService(repo, nil, nil, fakeTx{}), repo
+	return NewService(repo, nil, nil, nil, fakeTx{}), repo
 }
 
 func mk(t *testing.T, s *Service, name string, parent *int64, active bool) *domain.Category {

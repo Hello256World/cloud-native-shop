@@ -57,6 +57,51 @@ definitions:
       updated_at:
         type: string
     type: object
+  http.AttributeDefinitionRequest:
+    properties:
+      code:
+        maxLength: 50
+        minLength: 2
+        type: string
+      display_order:
+        minimum: 0
+        type: integer
+      is_filterable:
+        type: boolean
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      unit:
+        maxLength: 20
+        type: string
+      value_type:
+        enum:
+        - text
+        - number
+        type: string
+    required:
+    - code
+    - name
+    - value_type
+    type: object
+  http.AttributeDefinitionResponse:
+    properties:
+      code:
+        type: string
+      display_order:
+        type: integer
+      id:
+        type: integer
+      is_filterable:
+        type: boolean
+      name:
+        type: string
+      unit:
+        type: string
+      value_type:
+        type: string
+    type: object
   http.CategoryRequest:
     properties:
       image_name:
@@ -99,6 +144,11 @@ definitions:
     type: object
   http.CreateProductRequest:
     properties:
+      attributes:
+        items:
+          $ref: '#/definitions/http.ProductAttributeRequest'
+        maxItems: 50
+        type: array
       category_id:
         type: integer
       description:
@@ -183,6 +233,17 @@ definitions:
       value_id:
         type: integer
     type: object
+  http.ProductAttributeRequest:
+    properties:
+      attribute_id:
+        type: integer
+      value:
+        maxLength: 200
+        type: string
+    required:
+    - attribute_id
+    - value
+    type: object
   http.ProductPageResponse:
     properties:
       items:
@@ -194,6 +255,11 @@ definitions:
     type: object
   http.ProductRequest:
     properties:
+      attributes:
+        items:
+          $ref: '#/definitions/http.ProductAttributeRequest'
+        maxItems: 50
+        type: array
       category_id:
         type: integer
       description:
@@ -243,6 +309,10 @@ definitions:
         type: integer
       slug:
         type: string
+      specs:
+        items:
+          $ref: '#/definitions/http.SpecResponse'
+        type: array
       thumbnail:
         type: string
       updated_at:
@@ -297,6 +367,21 @@ definitions:
     - full_name
     - password
     - phone
+    type: object
+  http.SpecResponse:
+    properties:
+      attribute_id:
+        type: integer
+      code:
+        type: string
+      name:
+        type: string
+      unit:
+        type: string
+      value:
+        type: string
+      value_type:
+        type: string
     type: object
   http.TokenResponse:
     properties:
@@ -448,6 +533,60 @@ info:
   title: Cloud Native Shop API
   version: "1.0"
 paths:
+  /admin/attributes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.AttributeDefinitionResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: List attribute definitions (admin)
+      tags:
+      - admin-catalog
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Attribute definition
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.AttributeDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/http.AttributeDefinitionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpx.ErrorBody'
+      security:
+      - BearerAuth: []
+      summary: Create an attribute definition, e.g. RAM (admin)
+      tags:
+      - admin-catalog
   /admin/categories:
     get:
       produces:

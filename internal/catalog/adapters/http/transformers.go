@@ -1,6 +1,8 @@
 package http
 
 import (
+	"strconv"
+
 	"github.com/Hello256World/cloud-native-shop/internal/catalog/domain"
 	"github.com/Hello256World/cloud-native-shop/internal/catalog/usecase"
 )
@@ -35,13 +37,6 @@ func toVariantTypeResponse(t domain.VariantType) VariantTypeResponse {
 	}
 	return VariantTypeResponse{
 		ID: t.ID, Name: t.Name, DataType: t.DataType, DisplayOrder: t.DisplayOrder, Values: vals,
-	}
-}
-
-func toProductInput(r ProductRequest) usecase.ProductInput {
-	return usecase.ProductInput{
-		CategoryID: r.CategoryID, Name: r.Name, Slug: r.Slug, Description: r.Description,
-		Thumbnail: r.Thumbnail, ShipmentWeightG: r.ShipmentWeightG, IsActive: r.IsActive,
 	}
 }
 
@@ -85,10 +80,14 @@ func toProductResponse(p *domain.Product) ProductResponse {
 	for i, im := range p.Images {
 		images[i] = toImageResponse(im)
 	}
+	specs := make([]SpecResponse, len(p.Attributes))
+	for i, a := range p.Attributes {
+		specs[i] = toSpecResponse(a)
+	}
 	return ProductResponse{
 		ID: p.ID, CategoryID: p.CategoryID, Name: p.Name, Slug: p.Slug, Description: p.Description,
 		Thumbnail: p.Thumbnail, ShipmentWeightG: p.ShipmentWeightG, IsActive: p.IsActive,
-		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,
+		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,Specs: specs,
 	}
 }
 
@@ -116,4 +115,39 @@ func toProductPageResponse(p *usecase.ProductPage) ProductPageResponse {
 
 func toAdminListProductsInput(q AdminProductListQuery) usecase.ListProductsInput {
 	return usecase.ListProductsInput{Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q}
+}
+
+func toProductInput(r ProductRequest) usecase.ProductInput {
+	in := usecase.ProductInput{
+		CategoryID: r.CategoryID, Name: r.Name, Slug: r.Slug, Description: r.Description,
+		Thumbnail: r.Thumbnail, ShipmentWeightG: r.ShipmentWeightG, IsActive: r.IsActive,
+	}
+	if r.Attributes != nil {
+		in.Attributes = make([]usecase.AttributeInput, len(r.Attributes))
+		for i, a := range r.Attributes {
+			in.Attributes[i] = usecase.AttributeInput{AttributeID: a.AttributeID, Value: a.Value}
+		}
+	}
+	return in
+}
+
+func toAttributeDefinitionResponse(d domain.AttributeDefinition) AttributeDefinitionResponse {
+	return AttributeDefinitionResponse{
+		ID: d.ID, Code: d.Code, Name: d.Name, ValueType: string(d.ValueType),
+		Unit: d.Unit, IsFilterable: d.IsFilterable, DisplayOrder: d.DisplayOrder,
+	}
+}
+
+func toSpecResponse(a domain.ProductAttribute) SpecResponse {
+	val := ""
+	switch {
+	case a.ValueNumber != nil:
+		val = strconv.FormatFloat(*a.ValueNumber, 'f', -1, 64)
+	case a.ValueText != nil:
+		val = *a.ValueText
+	}
+	return SpecResponse{
+		AttributeID: a.AttributeID, Code: a.Code, Name: a.Name,
+		ValueType: string(a.ValueType), Value: val, Unit: a.Unit,
+	}
 }

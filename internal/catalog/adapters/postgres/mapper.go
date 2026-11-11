@@ -67,3 +67,10 @@ func typeToDomain(t db.CatalogVariantType) domain.VariantType {
 func valueToDomain(v db.CatalogVariantValue) domain.VariantValue {
 	return domain.VariantValue{ID: v.ID, TypeID: v.VariantTypeID, Value: v.Value, DisplayOrder: v.DisplayOrder}
 }
+
+func definitionToDomain(d db.CatalogAttributeDefinition) domain.AttributeDefinition {
+	return domain.AttributeDefinition{
+		ID: d.ID, Code: d.Code, Name: d.Name, ValueType: domain.AttributeValueType(d.ValueType),
+		Unit: d.Unit, IsFilterable: d.IsFilterable, DisplayOrder: d.DisplayOrder,
+	}
+}

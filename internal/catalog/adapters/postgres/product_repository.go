@@ -243,5 +243,19 @@ func (r *productRepository) assemble(c context.Context, q *db.Queries, row db.Ca
 		p.Images[i] = imageToDomain(val)
 	}
 
+	attrRows, err := q.ListProductAttributes(c, id)
+	if err != nil {
+		return nil, fmt.Errorf("catalog.repo.Product.assemble attributes id=%d: %w", id, err)
+	}
+
+	p.Attributes = make([]domain.ProductAttribute, len(attrRows))
+	for i, a := range attrRows {
+		p.Attributes[i] = domain.ProductAttribute{
+			AttributeID: a.AttributeID, Code: a.Code, Name: a.Name,
+			ValueType: domain.AttributeValueType(a.ValueType), Unit: a.Unit,
+			DisplayOrder: a.DisplayOrder, ValueText: a.ValueText, ValueNumber: a.ValueNumber,
+		}
+	}
+
 	return p, nil
 }

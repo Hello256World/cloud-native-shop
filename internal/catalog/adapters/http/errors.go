@@ -43,6 +43,10 @@ func toAPIError(err error) error {
 		api = apierrors.NewBadRequestError("invalid_cursor", "invalid cursor")
 	case errors.Is(err, domain.ErrInvalidSort):
 		api = apierrors.NewBadRequestError("invalid_sort", "invalid sort")
+	case errors.Is(err, domain.ErrAttributeCodeTaken):
+		api = apierrors.NewConflictError("attribute_code_taken", "attribute code already exists")
+	case errors.Is(err, domain.ErrInvalidAttributes):
+		api = apierrors.NewBadRequestError("invalid_attributes", "invalid product attributes")
 	default:
 		return err
 	}

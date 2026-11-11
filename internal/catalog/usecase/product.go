@@ -14,6 +14,7 @@ type ProductInput struct {
 	Description     *string
 	Thumbnail       string
 	ShipmentWeightG int
+	Attributes      []AttributeInput
 	IsActive        bool
 }
 
@@ -78,6 +79,11 @@ func (s *Service) CreateProduct(c context.Context, in CreateProductInput) (*doma
 		opts[i] = opt
 	}
 
+	attrs, err := s.buildAttributes(c, in.Attributes)
+	if err != nil {
+		return nil, err
+	}
+
 	var out *domain.Product
 	if err := s.tx.WithinTx(c, func(ctx context.Context) error {
 		p, err := s.products.Create(ctx, in.toDomain(0))
@@ -92,6 +98,10 @@ func (s *Service) CreateProduct(c context.Context, in CreateProductInput) (*doma
 		}
 
 		if err := s.products.RecalcMinPrice(ctx, p.ID); err != nil {
+			return err
+		}
+
+		if err := s.products.ReplaceAttributes(ctx, p.ID, attrs); err != nil {
 			return err
 		}
 
@@ -117,12 +127,25 @@ func (s *Service) UpdateProduct(c context.Context, id int64, in ProductInput) (*
 	if _, err := s.products.GetByID(c, id); err != nil {
 		return nil, err
 	}
-
 	if err := s.checkCategoryID(c, in.CategoryID); err != nil {
 		return nil, err
 	}
 
-	if _, err := s.products.Update(c, in.toDomain(id)); err != nil {
+	attrs, err := s.buildAttributes(c, in.Attributes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.tx.WithinTx(c, func(ctx context.Context) error {
+		if _, err := s.products.Update(ctx, in.toDomain(id)); err != nil {
+			return err
+		}
+		if in.Attributes != nil {
+			return s.products.ReplaceAttributes(ctx, id, attrs)
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 

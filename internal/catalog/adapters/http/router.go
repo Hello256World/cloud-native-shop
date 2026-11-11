@@ -2,7 +2,7 @@ package http
 
 import "github.com/gin-gonic/gin"
 
-func RegisterRoutes(api *gin.RouterGroup, ch *CategoryHandler, vh *VariantTypeHandler, ph *ProductHandler, pub *PublicProductHandler, authMW, adminMW gin.HandlerFunc) {
+func RegisterRoutes(api *gin.RouterGroup, ch *CategoryHandler, vh *VariantTypeHandler, ph *ProductHandler, pub *PublicProductHandler, ah *AttributeHandler, authMW, adminMW gin.HandlerFunc) {
 	api.GET("/categories", ch.ListPublic)
 	api.GET("/products", pub.List)
 	api.GET("/products/:slug", pub.Get)
@@ -26,4 +26,6 @@ func RegisterRoutes(api *gin.RouterGroup, ch *CategoryHandler, vh *VariantTypeHa
 	admin.POST("/products/:id/images", ph.AddImage)
 	admin.DELETE("/products/:id/images/:imageId", ph.DeleteImage)
 	admin.GET("/products", ph.List)
+	admin.GET("/attributes", ah.List)
+	admin.POST("/attributes", ah.Create)
 }

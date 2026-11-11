@@ -15,6 +15,93 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/attributes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-catalog"
+                ],
+                "summary": "List attribute definitions (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.AttributeDefinitionResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-catalog"
+                ],
+                "summary": "Create an attribute definition, e.g. RAM (admin)",
+                "parameters": [
+                    {
+                        "description": "Attribute definition",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.AttributeDefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/http.AttributeDefinitionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/categories": {
             "get": {
                 "security": [
@@ -1512,6 +1599,70 @@ const docTemplate = `{
                 }
             }
         },
+        "http.AttributeDefinitionRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "name",
+                "value_type"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "value_type": {
+                    "type": "string",
+                    "enum": [
+                        "text",
+                        "number"
+                    ]
+                }
+            }
+        },
+        "http.AttributeDefinitionResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value_type": {
+                    "type": "string"
+                }
+            }
+        },
         "http.CategoryRequest": {
             "type": "object",
             "required": [
@@ -1581,6 +1732,13 @@ const docTemplate = `{
                 "variants"
             ],
             "properties": {
+                "attributes": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "items": {
+                        "$ref": "#/definitions/http.ProductAttributeRequest"
+                    }
+                },
                 "category_id": {
                     "type": "integer"
                 },
@@ -1693,6 +1851,22 @@ const docTemplate = `{
                 }
             }
         },
+        "http.ProductAttributeRequest": {
+            "type": "object",
+            "required": [
+                "attribute_id",
+                "value"
+            ],
+            "properties": {
+                "attribute_id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string",
+                    "maxLength": 200
+                }
+            }
+        },
         "http.ProductPageResponse": {
             "type": "object",
             "properties": {
@@ -1717,6 +1891,13 @@ const docTemplate = `{
                 "thumbnail"
             ],
             "properties": {
+                "attributes": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "items": {
+                        "$ref": "#/definitions/http.ProductAttributeRequest"
+                    }
+                },
                 "category_id": {
                     "type": "integer"
                 },
@@ -1778,6 +1959,12 @@ const docTemplate = `{
                 },
                 "slug": {
                     "type": "string"
+                },
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.SpecResponse"
+                    }
                 },
                 "thumbnail": {
                     "type": "string"
@@ -1856,6 +2043,29 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 10
+                }
+            }
+        },
+        "http.SpecResponse": {
+            "type": "object",
+            "properties": {
+                "attribute_id": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "value_type": {
+                    "type": "string"
                 }
             }
         },
