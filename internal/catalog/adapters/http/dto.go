@@ -127,6 +127,7 @@ type ProductListQuery struct {
 	Sort       string `json:"sort" form:"sort" binding:"omitempty,oneof=newest price_asc price_desc"`
 	PriceMin   int64  `json:"price_min" form:"price_min" binding:"omitempty,gt=0"`
 	PriceMax   int64  `json:"price_max" form:"price_max" binding:"omitempty,gt=0,gtefield=PriceMin"`
+	Attr       string `json:"attr" form:"attr" binding:"omitempty,max=120"`
 }
 
 type ProductSummaryResponse struct {
@@ -182,4 +183,29 @@ type SpecResponse struct {
 	ValueType   string  `json:"value_type"`
 	Value       string  `json:"value"`
 	Unit        *string `json:"unit,omitempty"`
+}
+
+type AttributeDefinitionUpdateRequest struct {
+	Name         string  `json:"name" binding:"required,min=1,max=100"`
+	Unit         *string `json:"unit" binding:"omitempty,max=20"`
+	IsFilterable bool    `json:"is_filterable"`
+	DisplayOrder int     `json:"display_order" binding:"min=0"`
+}
+
+type FacetValueResponse struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+}
+
+type FacetResponse struct {
+	AttributeID int64                `json:"attribute_id"`
+	Code        string               `json:"code"`
+	Name        string               `json:"name"`
+	ValueType   string               `json:"value_type"`
+	Unit        *string              `json:"unit,omitempty"`
+	Values      []FacetValueResponse `json:"values"`
+}
+
+type FacetsQuery struct {
+	CategoryID *int64 `json:"category_id" form:"category_id" binding:"omitempty,gt=0"`
 }

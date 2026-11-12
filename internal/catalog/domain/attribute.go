@@ -31,3 +31,14 @@ type ProductAttribute struct {
 	ValueText    *string
 	ValueNumber  *float64
 }
+
+type FacetValue struct {
+	ValueText   *string
+	ValueNumber *float64
+	Count       int64
+}
+
+type AttributeFacet struct {
+	Attribute AttributeDefinition
+	Values    []FacetValue
+}

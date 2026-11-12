@@ -310,8 +310,15 @@ WHERE p.deleted_at IS NULL
   AND ($3::text = '' OR p.name ILIKE '%' || $3::text || '%' ESCAPE '\')
   AND ($4::bigint = 0 OR p.min_price >= $4::bigint)
   AND ($5::bigint = 0 OR p.min_price <= $5::bigint)
+  AND ($6::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = $6::bigint
+      AND (pa.value_number = $7::numeric
+           OR pa.value_text = $8::text)
+  ))
 ORDER BY p.id DESC
-LIMIT $6::int
+LIMIT $9::int
 `
 
 type ListPublicProductsParams struct {
@@ -320,6 +327,9 @@ type ListPublicProductsParams struct {
 	Search     string
 	PriceMin   int64
 	PriceMax   int64
+	AttrID     int64
+	AttrNumber *float64
+	AttrText   *string
 	PageSize   int
 }
 
@@ -340,6 +350,9 @@ func (q *Queries) ListPublicProducts(ctx context.Context, arg ListPublicProducts
 		arg.Search,
 		arg.PriceMin,
 		arg.PriceMax,
+		arg.AttrID,
+		arg.AttrNumber,
+		arg.AttrText,
 		arg.PageSize,
 	)
 	if err != nil {
@@ -383,8 +396,15 @@ WHERE p.deleted_at IS NULL
   AND ($4::text = '' OR p.name ILIKE '%' || $4::text || '%' ESCAPE '\')
   AND ($5::bigint = 0 OR p.min_price >= $5::bigint)
   AND ($6::bigint = 0 OR p.min_price <= $6::bigint)
+  AND ($7::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = $7::bigint
+      AND (pa.value_number = $8::numeric
+           OR pa.value_text = $9::text)
+  ))
 ORDER BY p.min_price ASC, p.id ASC
-LIMIT $7::int
+LIMIT $10::int
 `
 
 type ListPublicProductsByPriceAscParams struct {
@@ -394,6 +414,9 @@ type ListPublicProductsByPriceAscParams struct {
 	Search     string
 	PriceMin   int64
 	PriceMax   int64
+	AttrID     int64
+	AttrNumber *float64
+	AttrText   *string
 	PageSize   int
 }
 
@@ -415,6 +438,9 @@ func (q *Queries) ListPublicProductsByPriceAsc(ctx context.Context, arg ListPubl
 		arg.Search,
 		arg.PriceMin,
 		arg.PriceMax,
+		arg.AttrID,
+		arg.AttrNumber,
+		arg.AttrText,
 		arg.PageSize,
 	)
 	if err != nil {
@@ -458,8 +484,15 @@ WHERE p.deleted_at IS NULL
   AND ($4::text = '' OR p.name ILIKE '%' || $4::text || '%' ESCAPE '\')
   AND ($5::bigint = 0 OR p.min_price >= $5::bigint)
   AND ($6::bigint = 0 OR p.min_price <= $6::bigint)
+  AND ($7::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = $7::bigint
+      AND (pa.value_number = $8::numeric
+           OR pa.value_text = $9::text)
+  ))
 ORDER BY p.min_price DESC, p.id DESC
-LIMIT $7::int
+LIMIT $10::int
 `
 
 type ListPublicProductsByPriceDescParams struct {
@@ -469,6 +502,9 @@ type ListPublicProductsByPriceDescParams struct {
 	Search     string
 	PriceMin   int64
 	PriceMax   int64
+	AttrID     int64
+	AttrNumber *float64
+	AttrText   *string
 	PageSize   int
 }
 
@@ -490,6 +526,9 @@ func (q *Queries) ListPublicProductsByPriceDesc(ctx context.Context, arg ListPub
 		arg.Search,
 		arg.PriceMin,
 		arg.PriceMax,
+		arg.AttrID,
+		arg.AttrNumber,
+		arg.AttrText,
 		arg.PageSize,
 	)
 	if err != nil {

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -23,6 +24,13 @@ type AttributeInput struct {
 	Value       string
 }
 
+type AttributeDefinitionUpdateInput struct {
+	Name         string
+	Unit         *string
+	IsFilterable bool
+	DisplayOrder int
+}
+
 func (s *Service) CreateAttributeDefinition(c context.Context, in AttributeDefinitionInput) (*domain.AttributeDefinition, error) {
 	if !in.ValueType.IsValid() {
 		return nil, domain.ErrInvalidAttributes
@@ -39,6 +47,39 @@ func (s *Service) CreateAttributeDefinition(c context.Context, in AttributeDefin
 
 func (s *Service) ListAttributeDefinitions(c context.Context) ([]domain.AttributeDefinition, error) {
 	return s.attrs.ListDefinitions(c)
+}
+
+func (s *Service) UpdateAttributeDefinition(c context.Context, id int64, in AttributeDefinitionUpdateInput) (*domain.AttributeDefinition, error) {
+	return s.attrs.UpdateDefinition(c, &domain.AttributeDefinition{
+		ID: id, Name: in.Name, Unit: in.Unit,
+		IsFilterable: in.IsFilterable, DisplayOrder: in.DisplayOrder,
+	})
+}
+
+func (s *Service) ListProductFacets(c context.Context, categoryID *int64) ([]domain.AttributeFacet, error) {
+	var id int64
+	if categoryID != nil {
+		id = *categoryID
+	}
+	return s.attrs.ListFacets(c, id)
+}
+
+func (s *Service) resolveAttrFilter(c context.Context, code, value string) (id int64, num *float64, txt *string, err error) {
+	def, err := s.attrs.GetDefinitionByCode(c, strings.TrimSpace(code))
+	if err != nil {
+		if errors.Is(err, domain.ErrAttributeNotFound) {
+			return 0, nil, nil, domain.ErrInvalidAttrFilter
+		}
+		return 0, nil, nil, err
+	}
+	if !def.IsFilterable {
+		return 0, nil, nil, domain.ErrInvalidAttrFilter
+	}
+	num, txt, perr := parseAttrValue(*def, value)
+	if perr != nil {
+		return 0, nil, nil, domain.ErrInvalidAttrFilter
+	}
+	return def.ID, num, txt, nil
 }
 
 func (s *Service) buildAttributes(c context.Context, in []AttributeInput) ([]domain.ProductAttribute, error) {
@@ -71,23 +112,26 @@ func (s *Service) buildAttributes(c context.Context, in []AttributeInput) ([]dom
 		if !ok {
 			return nil, domain.ErrInvalidAttributes
 		}
-
-		val := strings.TrimSpace(a.Value)
-		if val == "" {
-			return nil, domain.ErrInvalidAttributes
+		num, txt, err := parseAttrValue(def, a.Value)
+		if err != nil {
+			return nil, err
 		}
-
-		pa := domain.ProductAttribute{AttributeID: def.ID}
-		if def.ValueType == domain.AttrNumber {
-			n, err := strconv.ParseFloat(val, 64)
-			if err != nil || math.IsNaN(n) || math.IsInf(n, 0) {
-				return nil, domain.ErrInvalidAttributes
-			}
-			pa.ValueNumber = &n
-		} else {
-			pa.ValueText = &val
-		}
-		out = append(out, pa)
+		out = append(out, domain.ProductAttribute{AttributeID: def.ID, ValueNumber: num, ValueText: txt})
 	}
 	return out, nil
+}
+
+func parseAttrValue(def domain.AttributeDefinition, raw string) (num *float64, txt *string, err error) {
+	val := strings.TrimSpace(raw)
+	if val == "" {
+		return nil, nil, domain.ErrInvalidAttributes
+	}
+	if def.ValueType == domain.AttrNumber {
+		n, perr := strconv.ParseFloat(val, 64)
+		if perr != nil || math.IsNaN(n) || math.IsInf(n, 0) {
+			return nil, nil, domain.ErrInvalidAttributes
+		}
+		return &n, nil, nil
+	}
+	return nil, &val, nil
 }

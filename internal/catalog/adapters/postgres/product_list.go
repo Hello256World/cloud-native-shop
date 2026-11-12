@@ -29,7 +29,7 @@ func (r *productRepository) ListPublic(c context.Context, f ports.ProductListFil
 	case domain.SortPriceAsc:
 		rows, err := q.ListPublicProductsByPriceAsc(c, db.ListPublicProductsByPriceAscParams{
 			AfterPrice: f.AfterPrice, AfterID: f.AfterID, CategoryID: f.CategoryID,
-			Search: search, PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit,
+			Search: search, PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit, AttrID: f.AttrID, AttrNumber: f.AttrNumber, AttrText: f.AttrText,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("catalog.repo.Product.ListPublic price_asc: %w", err)
@@ -41,7 +41,7 @@ func (r *productRepository) ListPublic(c context.Context, f ports.ProductListFil
 	case domain.SortPriceDesc:
 		rows, err := q.ListPublicProductsByPriceDesc(c, db.ListPublicProductsByPriceDescParams{
 			AfterPrice: f.AfterPrice, AfterID: f.AfterID, CategoryID: f.CategoryID,
-			Search: search, PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit,
+			Search: search, PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit, AttrID: f.AttrID, AttrNumber: f.AttrNumber, AttrText: f.AttrText,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("catalog.repo.Product.ListPublic price_desc: %w", err)
@@ -50,10 +50,10 @@ func (r *productRepository) ListPublic(c context.Context, f ports.ProductListFil
 			out = append(out, summary(v.ID, v.CategoryID, v.Name, v.Slug, v.Thumbnail, v.MinPrice, v.IsActive))
 		}
 
-	default: 
+	default:
 		rows, err := q.ListPublicProducts(c, db.ListPublicProductsParams{
 			AfterID: f.AfterID, CategoryID: f.CategoryID, Search: search,
-			PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit,
+			PriceMin: f.PriceMin, PriceMax: f.PriceMax, PageSize: f.Limit, AttrID: f.AttrID, AttrNumber: f.AttrNumber, AttrText: f.AttrText,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("catalog.repo.Product.ListPublic newest: %w", err)

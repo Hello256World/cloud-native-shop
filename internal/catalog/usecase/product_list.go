@@ -21,6 +21,8 @@ type ListProductsInput struct {
 	Sort       domain.ProductSort
 	PriceMin   int64
 	PriceMax   int64
+	AttrCode   string
+	AttrValue  string
 }
 
 type ProductPage struct {
@@ -37,6 +39,7 @@ func (s *Service) ListPublicProducts(c context.Context, in ListProductsInput) (*
 func (s *Service) ListAdminProducts(c context.Context, in ListProductsInput) (*ProductPage, error) {
 	in.Sort = domain.SortNewest
 	in.PriceMin, in.PriceMax = 0, 0
+	in.AttrCode, in.AttrValue = "", ""
 	return s.listProducts(c, in, s.products.ListAdmin)
 }
 
@@ -73,6 +76,12 @@ func (s *Service) listProducts(c context.Context, in ListProductsInput, fetch li
 	}
 	if in.CategoryID != nil {
 		f.CategoryID = *in.CategoryID
+	}
+	if in.AttrCode != "" {
+		f.AttrID, f.AttrNumber, f.AttrText, err = s.resolveAttrFilter(c, in.AttrCode, in.AttrValue)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	items, err := fetch(c, f)

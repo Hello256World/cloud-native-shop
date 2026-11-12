@@ -2,6 +2,7 @@ package http
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Hello256World/cloud-native-shop/internal/catalog/domain"
 	"github.com/Hello256World/cloud-native-shop/internal/catalog/usecase"
@@ -87,16 +88,21 @@ func toProductResponse(p *domain.Product) ProductResponse {
 	return ProductResponse{
 		ID: p.ID, CategoryID: p.CategoryID, Name: p.Name, Slug: p.Slug, Description: p.Description,
 		Thumbnail: p.Thumbnail, ShipmentWeightG: p.ShipmentWeightG, IsActive: p.IsActive,
-		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,Specs: specs,
+		Variants: variants, Images: images, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt, Specs: specs,
 	}
 }
 
 func toListProductsInput(q ProductListQuery) usecase.ListProductsInput {
-	return usecase.ListProductsInput{
+	in := usecase.ListProductsInput{
 		Cursor: q.Cursor, Limit: q.Limit, CategoryID: q.CategoryID, Search: q.Q,
 		Sort: domain.ProductSort(q.Sort), PriceMin: q.PriceMin, PriceMax: q.PriceMax,
 	}
+	if q.Attr != "" {
+		in.AttrCode, in.AttrValue, _ = strings.Cut(q.Attr, ":")
+	}
+	return in
 }
+
 func toProductPageResponse(p *usecase.ProductPage) ProductPageResponse {
 	items := make([]ProductSummaryResponse, len(p.Items))
 	for i, v := range p.Items {
@@ -149,5 +155,23 @@ func toSpecResponse(a domain.ProductAttribute) SpecResponse {
 	return SpecResponse{
 		AttributeID: a.AttributeID, Code: a.Code, Name: a.Name,
 		ValueType: string(a.ValueType), Value: val, Unit: a.Unit,
+	}
+}
+
+func toFacetResponse(f domain.AttributeFacet) FacetResponse {
+	vals := make([]FacetValueResponse, len(f.Values))
+	for i, v := range f.Values {
+		s := ""
+		switch {
+		case v.ValueNumber != nil:
+			s = strconv.FormatFloat(*v.ValueNumber, 'f', -1, 64)
+		case v.ValueText != nil:
+			s = *v.ValueText
+		}
+		vals[i] = FacetValueResponse{Value: s, Count: v.Count}
+	}
+	return FacetResponse{
+		AttributeID: f.Attribute.ID, Code: f.Attribute.Code, Name: f.Attribute.Name,
+		ValueType: string(f.Attribute.ValueType), Unit: f.Attribute.Unit, Values: vals,
 	}
 }

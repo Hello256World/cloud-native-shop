@@ -47,6 +47,10 @@ func toAPIError(err error) error {
 		api = apierrors.NewConflictError("attribute_code_taken", "attribute code already exists")
 	case errors.Is(err, domain.ErrInvalidAttributes):
 		api = apierrors.NewBadRequestError("invalid_attributes", "invalid product attributes")
+	case errors.Is(err, domain.ErrAttributeNotFound):
+		api = apierrors.NewNotFoundError("attribute_not_found", "attribute not found")
+	case errors.Is(err, domain.ErrInvalidAttrFilter):
+		api = apierrors.NewBadRequestError("invalid_attr_filter", "invalid attribute filter")
 	default:
 		return err
 	}

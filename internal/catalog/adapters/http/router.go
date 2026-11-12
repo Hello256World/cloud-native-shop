@@ -5,6 +5,7 @@ import "github.com/gin-gonic/gin"
 func RegisterRoutes(api *gin.RouterGroup, ch *CategoryHandler, vh *VariantTypeHandler, ph *ProductHandler, pub *PublicProductHandler, ah *AttributeHandler, authMW, adminMW gin.HandlerFunc) {
 	api.GET("/categories", ch.ListPublic)
 	api.GET("/products", pub.List)
+	api.GET("/products/filters", pub.Filters)
 	api.GET("/products/:slug", pub.Get)
 
 	admin := api.Group("/admin", authMW, adminMW)
@@ -28,4 +29,5 @@ func RegisterRoutes(api *gin.RouterGroup, ch *CategoryHandler, vh *VariantTypeHa
 	admin.GET("/products", ph.List)
 	admin.GET("/attributes", ah.List)
 	admin.POST("/attributes", ah.Create)
+	admin.PUT("/attributes/:id", ah.Update)
 }

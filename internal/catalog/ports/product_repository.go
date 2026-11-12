@@ -15,6 +15,9 @@ type ProductListFilter struct {
 	PriceMin   int64
 	PriceMax   int64
 	Limit      int
+	AttrID     int64    
+	AttrNumber *float64 
+	AttrText   *string
 }
 
 type ProductRepository interface {

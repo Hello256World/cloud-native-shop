@@ -75,6 +75,13 @@ WHERE p.deleted_at IS NULL
   AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
   AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
   AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
+  AND (sqlc.arg(attr_id)::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = sqlc.arg(attr_id)::bigint
+      AND (pa.value_number = sqlc.narg(attr_number)::numeric
+           OR pa.value_text = sqlc.narg(attr_text)::text)
+  ))
 ORDER BY p.id DESC
 LIMIT sqlc.arg(page_size)::int;
 
@@ -93,6 +100,13 @@ WHERE p.deleted_at IS NULL
   AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
   AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
   AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
+  AND (sqlc.arg(attr_id)::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = sqlc.arg(attr_id)::bigint
+      AND (pa.value_number = sqlc.narg(attr_number)::numeric
+           OR pa.value_text = sqlc.narg(attr_text)::text)
+  ))
 ORDER BY p.min_price ASC, p.id ASC
 LIMIT sqlc.arg(page_size)::int;
 
@@ -111,6 +125,13 @@ WHERE p.deleted_at IS NULL
   AND (sqlc.arg(search)::text = '' OR p.name ILIKE '%' || sqlc.arg(search)::text || '%' ESCAPE '\')
   AND (sqlc.arg(price_min)::bigint = 0 OR p.min_price >= sqlc.arg(price_min)::bigint)
   AND (sqlc.arg(price_max)::bigint = 0 OR p.min_price <= sqlc.arg(price_max)::bigint)
+  AND (sqlc.arg(attr_id)::bigint = 0 OR EXISTS (
+    SELECT 1 FROM catalog.product_attributes pa
+    WHERE pa.product_id = p.id
+      AND pa.attribute_id = sqlc.arg(attr_id)::bigint
+      AND (pa.value_number = sqlc.narg(attr_number)::numeric
+           OR pa.value_text = sqlc.narg(attr_text)::text)
+  ))
 ORDER BY p.min_price DESC, p.id DESC
 LIMIT sqlc.arg(page_size)::int;
 

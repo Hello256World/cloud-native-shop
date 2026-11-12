@@ -18,6 +18,27 @@ func (q *Queries) DeleteProductAttributes(ctx context.Context, productID int64) 
 	return err
 }
 
+const getAttributeDefinitionByCode = `-- name: GetAttributeDefinitionByCode :one
+SELECT id, code, name, value_type, unit, is_filterable, display_order, created_at, updated_at FROM catalog.attribute_definitions WHERE code = $1
+`
+
+func (q *Queries) GetAttributeDefinitionByCode(ctx context.Context, code string) (CatalogAttributeDefinition, error) {
+	row := q.db.QueryRow(ctx, getAttributeDefinitionByCode, code)
+	var i CatalogAttributeDefinition
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.Name,
+		&i.ValueType,
+		&i.Unit,
+		&i.IsFilterable,
+		&i.DisplayOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertAttributeDefinition = `-- name: InsertAttributeDefinition :one
 INSERT INTO catalog.attribute_definitions (code, name, value_type, unit, is_filterable, display_order)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -147,6 +168,64 @@ func (q *Queries) ListAttributeDefinitionsByIDs(ctx context.Context, ids []int64
 	return items, nil
 }
 
+const listAttributeFacets = `-- name: ListAttributeFacets :many
+SELECT ad.id AS attribute_id, ad.code, ad.name, ad.value_type, ad.unit, ad.display_order,
+       pa.value_text, pa.value_number, COUNT(*)::bigint AS product_count
+FROM catalog.product_attributes pa
+JOIN catalog.attribute_definitions ad ON ad.id = pa.attribute_id AND ad.is_filterable
+JOIN catalog.products p ON p.id = pa.product_id
+JOIN catalog.categories c ON c.id = p.category_id AND c.is_active AND c.deleted_at IS NULL
+WHERE p.deleted_at IS NULL
+  AND p.is_active
+  AND p.min_price IS NOT NULL
+  AND ($1::bigint = 0 OR p.category_id = $1::bigint)
+GROUP BY ad.id, ad.code, ad.name, ad.value_type, ad.unit, ad.display_order,
+         pa.value_text, pa.value_number
+ORDER BY ad.display_order, ad.id, pa.value_number, pa.value_text
+`
+
+type ListAttributeFacetsRow struct {
+	AttributeID  int64
+	Code         string
+	Name         string
+	ValueType    string
+	Unit         *string
+	DisplayOrder int
+	ValueText    *string
+	ValueNumber  *float64
+	ProductCount int64
+}
+
+func (q *Queries) ListAttributeFacets(ctx context.Context, categoryID int64) ([]ListAttributeFacetsRow, error) {
+	rows, err := q.db.Query(ctx, listAttributeFacets, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAttributeFacetsRow
+	for rows.Next() {
+		var i ListAttributeFacetsRow
+		if err := rows.Scan(
+			&i.AttributeID,
+			&i.Code,
+			&i.Name,
+			&i.ValueType,
+			&i.Unit,
+			&i.DisplayOrder,
+			&i.ValueText,
+			&i.ValueNumber,
+			&i.ProductCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProductAttributes = `-- name: ListProductAttributes :many
 SELECT pa.attribute_id, ad.code, ad.name, ad.value_type, ad.unit, ad.display_order,
        pa.value_text, pa.value_number
@@ -194,4 +273,42 @@ func (q *Queries) ListProductAttributes(ctx context.Context, productID int64) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAttributeDefinition = `-- name: UpdateAttributeDefinition :one
+UPDATE catalog.attribute_definitions
+SET name = $2, unit = $3, is_filterable = $4, display_order = $5
+WHERE id = $1
+RETURNING id, code, name, value_type, unit, is_filterable, display_order, created_at, updated_at
+`
+
+type UpdateAttributeDefinitionParams struct {
+	ID           int64
+	Name         string
+	Unit         *string
+	IsFilterable bool
+	DisplayOrder int
+}
+
+func (q *Queries) UpdateAttributeDefinition(ctx context.Context, arg UpdateAttributeDefinitionParams) (CatalogAttributeDefinition, error) {
+	row := q.db.QueryRow(ctx, updateAttributeDefinition,
+		arg.ID,
+		arg.Name,
+		arg.Unit,
+		arg.IsFilterable,
+		arg.DisplayOrder,
+	)
+	var i CatalogAttributeDefinition
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.Name,
+		&i.ValueType,
+		&i.Unit,
+		&i.IsFilterable,
+		&i.DisplayOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

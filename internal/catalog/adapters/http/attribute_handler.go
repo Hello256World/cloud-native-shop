@@ -13,6 +13,7 @@ import (
 type attributeService interface {
 	CreateAttributeDefinition(context.Context, usecase.AttributeDefinitionInput) (*domain.AttributeDefinition, error)
 	ListAttributeDefinitions(context.Context) ([]domain.AttributeDefinition, error)
+	UpdateAttributeDefinition(context.Context, int64, usecase.AttributeDefinitionUpdateInput) (*domain.AttributeDefinition, error)
 }
 
 type AttributeHandler struct {
@@ -80,4 +81,38 @@ func (h *AttributeHandler) List(c *gin.Context) {
 		out[i] = toAttributeDefinitionResponse(v)
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+// Update godoc
+// @Summary     Update an attribute definition; code and value_type are immutable (admin)
+// @Tags        admin-catalog
+// @Accept      json
+// @Produce     json
+// @Security    BearerAuth
+// @Param       id path int true "Attribute ID"
+// @Param       request body AttributeDefinitionUpdateRequest true "Attribute definition"
+// @Success     200 {object} AttributeDefinitionResponse
+// @Failure     400 {object} httpx.ErrorBody
+// @Failure     404 {object} httpx.ErrorBody
+// @Router      /admin/attributes/{id} [put]
+func (h *AttributeHandler) Update(c *gin.Context) {
+	id, ok := httpx.PathID(c)
+	if !ok {
+		return
+	}
+
+	var req AttributeDefinitionUpdateRequest
+	if !httpx.Bind(c, &req) {
+		return
+	}
+
+	d, err := h.svc.UpdateAttributeDefinition(c.Request.Context(), id, usecase.AttributeDefinitionUpdateInput{
+		Name: req.Name, Unit: req.Unit, IsFilterable: req.IsFilterable, DisplayOrder: req.DisplayOrder,
+	})
+	if err != nil {
+		httpx.Respond(c, toAPIError(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, toAttributeDefinitionResponse(*d))
 }

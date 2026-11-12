@@ -13,6 +13,7 @@ import (
 type publicProductService interface {
 	ListPublicProducts(c context.Context, in usecase.ListProductsInput) (*usecase.ProductPage, error)
 	GetPublicProductBySlug(c context.Context, slug string) (*domain.Product, error)
+	ListProductFacets(context.Context, *int64) ([]domain.AttributeFacet, error)
 }
 
 type PublicProductHandler struct {
@@ -37,6 +38,7 @@ func NewPublicProductHandler(svc publicProductService) *PublicProductHandler {
 // @Param       sort        query string false "newest (default) | price_asc | price_desc" Enums(newest, price_asc, price_desc)
 // @Param       price_min   query int    false "Minimum price (minor units, on the lowest variant price)"
 // @Param       price_max   query int    false "Maximum price"
+// @Param       attr        query string false "Attribute filter as code:value, e.g. ram:32 (filterable attributes only)"
 // @Success     200 {object} ProductPageResponse
 // @Failure     400 {object} httpx.ErrorBody
 // @Router      /products [get]
@@ -72,4 +74,30 @@ func (h *PublicProductHandler) Get(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, toProductResponse(items))
+}
+
+// Filters godoc
+// @Summary     List filterable attributes with their values and product counts
+// @Tags        catalog
+// @Produce     json
+// @Param       category_id query int false "Limit facets to a category (exact)"
+// @Success     200 {array} FacetResponse
+// @Failure     400 {object} httpx.ErrorBody
+// @Router      /products/filters [get]
+func (h *PublicProductHandler) Filters(c *gin.Context) {
+	var q FacetsQuery
+	if !httpx.Bind(c, &q) {
+		return
+	}
+
+	facets, err := h.svc.ListProductFacets(c.Request.Context(), q.CategoryID)
+	if err != nil {
+		httpx.Respond(c, toAPIError(err))
+		return
+	}
+	out := make([]FacetResponse, len(facets))
+	for i, f := range facets {
+		out[i] = toFacetResponse(f)
+	}
+	c.JSON(http.StatusOK, out)
 }

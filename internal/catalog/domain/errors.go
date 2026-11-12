@@ -28,4 +28,7 @@ var (
 
 	ErrAttributeCodeTaken = errors.New("attribute code already exists")
 	ErrInvalidAttributes  = errors.New("invalid product attributes")
+
+	ErrAttributeNotFound = errors.New("attribute not found")
+	ErrInvalidAttrFilter = errors.New("invalid attribute filter")
 )

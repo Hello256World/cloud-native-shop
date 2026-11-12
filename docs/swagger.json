@@ -95,6 +95,63 @@
                 }
             }
         },
+        "/admin/attributes/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-catalog"
+                ],
+                "summary": "Update an attribute definition; code and value_type are immutable (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Attribute definition",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.AttributeDefinitionUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.AttributeDefinitionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/categories": {
             "get": {
                 "security": [
@@ -1433,6 +1490,12 @@
                         "description": "Maximum price",
                         "name": "price_max",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Attribute filter as code:value, e.g. ram:32 (filterable attributes only)",
+                        "name": "attr",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1440,6 +1503,42 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/http.ProductPageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorBody"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/filters": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catalog"
+                ],
+                "summary": "List filterable attributes with their values and product counts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit facets to a category (exact)",
+                        "name": "category_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.FacetResponse"
+                            }
                         }
                     },
                     "400": {
@@ -1633,6 +1732,30 @@
                 }
             }
         },
+        "http.AttributeDefinitionUpdateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "display_order": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "is_filterable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
         "http.CategoryRequest": {
             "type": "object",
             "required": [
@@ -1750,6 +1873,43 @@
                     "items": {
                         "$ref": "#/definitions/http.VariantRequest"
                     }
+                }
+            }
+        },
+        "http.FacetResponse": {
+            "type": "object",
+            "properties": {
+                "attribute_id": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value_type": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.FacetValueResponse"
+                    }
+                }
+            }
+        },
+        "http.FacetValueResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
                 }
             }
         },
